@@ -1,0 +1,1146 @@
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                    05/22/2025  09:16:29  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22.4.0, INVOKED BY:
+D:\PROGRAM FILES\KEIL_V5\C51\BIN\BL51.EXE .\Objects\STARTUP.obj, .\Objects\ssd1306xled.obj, .\Objects\main.obj TO .\Obje
+>> cts\Tiny_Stc_Breakout PRINT (.\Listings\Tiny_Stc_Breakout.m51) RAMSIZE (256)
+
+
+MEMORY MODEL: LARGE WITH FLOATING POINT ARITHMETIC
+
+
+INPUT MODULES INCLUDED:
+  .\Objects\STARTUP.obj (?C_STARTUP)
+  .\Objects\ssd1306xled.obj (SSD1306XLED)
+  .\Objects\main.obj (MAIN)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FPCMP)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FCAST)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (PRINTF)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (FLOOR)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FPADD)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?CASTF)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FPROUND)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FPCONVERT)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FPGETOPN)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FPMUL)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FPDIV)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51FPL.LIB (?C?FTNPWR)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C_INIT)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?COPY)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?CLDPTR)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?CLDOPTR)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?CSTPTR)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?IMUL)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?SIDIV)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?ILDIX)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?LNEG)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?ULCMP)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?LSTXDATA)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?PLDIXDATA)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?PSTXDATA)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?CCASE)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (PUTCHAR)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (RAND)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?UIDIV)
+  D:\PROGRAM FILES\KEIL_V5\C51\LIB\C51L.LIB (?C?LLDXDATA)
+
+
+LINK MAP OF MODULE:  .\Objects\Tiny_Stc_Breakout (?C_STARTUP)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0005H     UNIT         _DATA_GROUP_
+                    000DH     0013H                  *** GAP ***
+            BIT     0020H.0   0001H.1   UNIT         _BIT_GROUP_
+                    0021H.1   0000H.7                *** GAP ***
+            IDATA   0022H     0001H     UNIT         ?STACK
+
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 2
+
+
+            * * * * * * *  X D A T A   M E M O R Y  * * * * * * *
+            XDATA   0000H     0042H     UNIT         _XDATA_GROUP_
+            XDATA   0042H     003EH     UNIT         ?XD?MAIN
+            XDATA   0080H     000BH     UNIT         ?XD?_SSD1306_DRAW_BMP?SSD1306XLED
+            XDATA   008BH     0004H     UNIT         ?XD?SSD1306XLED
+            XDATA   008FH     0004H     UNIT         ?XD?RAND?RAND
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     0008H     UNIT         ?PR?SSD1306_SEND_DATA_START?SSD1306XLED
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     0806H     UNIT         ?C?LIB_CODE
+            CODE    0814H     074FH     UNIT         ?PR?LOOP?MAIN
+            CODE    0F63H     0483H     UNIT         ?PR?PRINTF?PRINTF
+            CODE    13E6H     0256H     UNIT         ?PR?COLLISION?MAIN
+            CODE    163CH     01BCH     UNIT         ?CO?MAIN
+            CODE    17F8H     019FH     UNIT         ?CO?SSD1306XLED
+            CODE    1997H     00F0H     UNIT         ?PR?_FLOOR?FLOOR
+            CODE    1A87H     00C3H     UNIT         ?PR?_SSD1306_CHAR_F6X8?SSD1306XLED
+            CODE    1B4AH     00A6H     UNIT         ?PR?SSD1306_INIT?SSD1306XLED
+            CODE    1BF0H     00A2H     UNIT         ?PR?RESETGAME?MAIN
+            CODE    1C92H     009DH     UNIT         ?PR?WAITSTART?SSD1306XLED
+            CODE    1D2FH     009BH     UNIT         ?PR?_SSD1306_DRAW_BMP?SSD1306XLED
+            CODE    1DCAH     008CH     UNIT         ?C_C51STARTUP
+            CODE    1E56H     006EH     UNIT         ?PR?_BEEP?SSD1306XLED
+            CODE    1EC4H     004FH     UNIT         ?PR?_SENDBLOCK?MAIN
+            CODE    1F13H     004DH     UNIT         ?PR?RAND?RAND
+            CODE    1F60H     004BH     UNIT         ?PR?TIMER0_ISR?SSD1306XLED
+            CODE    1FABH     004AH     UNIT         ?PR?_DELAY?SSD1306XLED
+            CODE    1FF5H     0030H     UNIT         ?PR?DRAWPLATFORM?MAIN
+            CODE    2025H     002DH     UNIT         ?PR?_SSD1306_FILLSCREEN?SSD1306XLED
+            CODE    2052H     002CH     UNIT         ?PR?_RANDOM?SSD1306XLED
+            CODE    207EH     0027H     UNIT         ?PR?_SSD1306_SETPOS?SSD1306XLED
+            CODE    20A5H     0027H     UNIT         ?C_INITSEG
+            CODE    20CCH     0027H     UNIT         ?PR?PUTCHAR?PUTCHAR
+            CODE    20F3H     0017H     UNIT         ?PR?_ITOA?SSD1306XLED
+            CODE    210AH     0016H     UNIT         ?PR?_IIC_WRITE?SSD1306XLED
+            CODE    2120H     0015H     UNIT         ?PR?TIMER0_INIT?SSD1306XLED
+            CODE    2135H     0010H     UNIT         ?PR?_SSD1306_SEND_COMMAND?SSD1306XLED
+            CODE    2145H     000FH     UNIT         ?PR?MILLIS?SSD1306XLED
+            CODE    2154H     000FH     UNIT         ?PR?SETUP?MAIN
+            CODE    2163H     000EH     UNIT         ?PR?_IIC_WRITEBYTE?SSD1306XLED
+            CODE    2171H     000DH     UNIT         ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+            CODE    217EH     000CH     UNIT         ?PR?WAIT?SSD1306XLED
+            CODE    218AH     000CH     UNIT         ?PR?IIC_ACK?SSD1306XLED
+            CODE    2196H     0009H     UNIT         ?PR?IIC_START?SSD1306XLED
+            CODE    219FH     0009H     UNIT         ?PR?IIC_STOP?SSD1306XLED
+            CODE    21A8H     0008H     UNIT         ?PR?MAIN?MAIN
+            CODE    21B0H     0005H     UNIT         ?PR?_PGM_READ_BYTE?SSD1306XLED
+            CODE    21B5H     0003H     UNIT         ?PR?SSD1306_XFER_START?SSD1306XLED
+            CODE    21B8H     0003H     UNIT         ?PR?SSD1306_XFER_STOP?SSD1306XLED
+            CODE    21BBH     0003H     UNIT         ?PR?SSD1306_SEND_DATA_STOP?SSD1306XLED
+            CODE    21BEH     0001H     UNIT         ?PR?SYSTEM_SLEEP?SSD1306XLED
+
+
+
+OVERLAY MAP OF MODULE:   .\Objects\Tiny_Stc_Breakout (?C_STARTUP)
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 3
+
+
+
+
+SEGMENT                                            BIT_GROUP          DATA_GROUP          XDATA_GROUP
+  +--> CALLED SEGMENT                           START    LENGTH     START    LENGTH     START    LENGTH
+-------------------------------------------------------------------------------------------------------
+?C_C51STARTUP                                   -----    -----      -----    -----      -----    -----
+  +--> ?PR?MAIN?MAIN
+  +--> ?C_INITSEG
+
+?PR?MAIN?MAIN                                   -----    -----      -----    -----      -----    -----
+  +--> ?PR?SETUP?MAIN
+  +--> ?PR?LOOP?MAIN
+
+?PR?SETUP?MAIN                                  -----    -----      -----    -----      -----    -----
+  +--> ?PR?SSD1306_INIT?SSD1306XLED
+  +--> ?PR?RESETGAME?MAIN
+  +--> ?PR?MILLIS?SSD1306XLED
+
+?PR?SSD1306_INIT?SSD1306XLED                    -----    -----      -----    -----      -----    -----
+  +--> ?PR?TIMER0_INIT?SSD1306XLED
+  +--> ?PR?_SSD1306_SEND_COMMAND?SSD1306XLED
+
+?PR?_SSD1306_SEND_COMMAND?SSD1306XLED           -----    -----      -----    -----      -----    -----
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+  +--> ?PR?SSD1306_XFER_STOP?SSD1306XLED
+
+?PR?_SSD1306_SEND_BYTE?SSD1306XLED              -----    -----      -----    -----      -----    -----
+  +--> ?PR?SSD1306_XFER_START?SSD1306XLED
+  +--> ?PR?_IIC_WRITEBYTE?SSD1306XLED
+  +--> ?PR?IIC_ACK?SSD1306XLED
+
+?PR?SSD1306_XFER_START?SSD1306XLED              -----    -----      -----    -----      -----    -----
+  +--> ?PR?IIC_START?SSD1306XLED
+
+?PR?IIC_START?SSD1306XLED                       -----    -----      -----    -----      -----    -----
+  +--> ?PR?WAIT?SSD1306XLED
+
+?PR?_IIC_WRITEBYTE?SSD1306XLED                  -----    -----      -----    -----      -----    -----
+  +--> ?PR?WAIT?SSD1306XLED
+
+?PR?IIC_ACK?SSD1306XLED                         -----    -----      -----    -----      -----    -----
+  +--> ?PR?_IIC_WRITEBYTE?SSD1306XLED
+  +--> ?PR?WAIT?SSD1306XLED
+
+?PR?SSD1306_XFER_STOP?SSD1306XLED               -----    -----      -----    -----      -----    -----
+  +--> ?PR?IIC_STOP?SSD1306XLED
+
+?PR?IIC_STOP?SSD1306XLED                        -----    -----      -----    -----      -----    -----
+  +--> ?PR?WAIT?SSD1306XLED
+
+?PR?RESETGAME?MAIN                              -----    -----      -----    -----      -----    -----
+  +--> ?PR?_SSD1306_FILLSCREEN?SSD1306XLED
+  +--> ?CO?MAIN
+  +--> ?PR?_SSD1306_CHAR_F6X8?SSD1306XLED
+  +--> ?PR?WAITSTART?SSD1306XLED
+  +--> ?PR?_DELAY?SSD1306XLED
+  +--> ?PR?_RANDOM?SSD1306XLED
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 4
+
+
+
+?PR?_SSD1306_FILLSCREEN?SSD1306XLED             -----    -----      -----    -----      -----    -----
+  +--> ?PR?_SSD1306_SEND_COMMAND?SSD1306XLED
+  +--> ?PR?SSD1306_SEND_DATA_START?SSD1306XLED
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+  +--> ?PR?SSD1306_SEND_DATA_STOP?SSD1306XLED
+
+?PR?SSD1306_SEND_DATA_START?SSD1306XLED         -----    -----      -----    -----      -----    -----
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+
+?PR?SSD1306_SEND_DATA_STOP?SSD1306XLED          -----    -----      -----    -----      -----    -----
+  +--> ?PR?SSD1306_XFER_STOP?SSD1306XLED
+
+?PR?_SSD1306_CHAR_F6X8?SSD1306XLED              -----    -----      -----    -----      0010H    0008H
+  +--> ?PR?_SSD1306_SETPOS?SSD1306XLED
+  +--> ?PR?SSD1306_SEND_DATA_START?SSD1306XLED
+  +--> ?CO?SSD1306XLED
+  +--> ?PR?_PGM_READ_BYTE?SSD1306XLED
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+  +--> ?PR?SSD1306_SEND_DATA_STOP?SSD1306XLED
+
+?PR?_SSD1306_SETPOS?SSD1306XLED                 -----    -----      -----    -----      -----    -----
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+  +--> ?PR?SSD1306_XFER_STOP?SSD1306XLED
+
+?PR?WAITSTART?SSD1306XLED                       -----    -----      -----    -----      000CH    0004H
+  +--> ?CO?SSD1306XLED
+  +--> ?PR?_SSD1306_CHAR_F6X8?SSD1306XLED
+
+?PR?_DELAY?SSD1306XLED                          -----    -----      -----    -----      000CH    0006H
+  +--> ?PR?MILLIS?SSD1306XLED
+
+?PR?_RANDOM?SSD1306XLED                         -----    -----      -----    -----      000CH    0004H
+  +--> ?PR?RAND?RAND
+
+?PR?LOOP?MAIN                                   -----    -----      -----    -----      0000H    000CH
+  +--> ?PR?_DELAY?SSD1306XLED
+  +--> ?CO?MAIN
+  +--> ?PR?MILLIS?SSD1306XLED
+  +--> ?PR?_SSD1306_FILLSCREEN?SSD1306XLED
+  +--> ?PR?_SSD1306_CHAR_F6X8?SSD1306XLED
+  +--> ?PR?_ITOA?SSD1306XLED
+  +--> ?PR?_RANDOM?SSD1306XLED
+  +--> ?PR?_BEEP?SSD1306XLED
+  +--> ?PR?SYSTEM_SLEEP?SSD1306XLED
+  +--> ?PR?RESETGAME?MAIN
+  +--> ?PR?_FLOOR?FLOOR
+  +--> ?PR?COLLISION?MAIN
+  +--> ?PR?_SSD1306_SETPOS?SSD1306XLED
+  +--> ?PR?SSD1306_SEND_DATA_START?SSD1306XLED
+  +--> ?PR?_SENDBLOCK?MAIN
+  +--> ?PR?SSD1306_SEND_DATA_STOP?SSD1306XLED
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+  +--> ?PR?DRAWPLATFORM?MAIN
+
+?PR?_ITOA?SSD1306XLED                           -----    -----      -----    -----      000CH    0006H
+  +--> ?CO?SSD1306XLED
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 5
+
+
+  +--> ?PR?PRINTF?PRINTF
+
+?PR?PRINTF?PRINTF                               0020H.0  0001H.1    0008H    0005H      0012H    0030H
+  +--> ?PR?PUTCHAR?PUTCHAR
+
+?PR?_BEEP?SSD1306XLED                           -----    -----      -----    -----      000CH    0004H
+
+?PR?_FLOOR?FLOOR                                -----    -----      -----    -----      000CH    0008H
+
+?PR?COLLISION?MAIN                              -----    -----      -----    -----      -----    -----
+  +--> ?PR?_BEEP?SSD1306XLED
+
+?PR?_SENDBLOCK?MAIN                             -----    -----      -----    -----      -----    -----
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+
+?PR?DRAWPLATFORM?MAIN                           -----    -----      -----    -----      000CH    0001H
+  +--> ?PR?_SSD1306_SETPOS?SSD1306XLED
+  +--> ?PR?SSD1306_SEND_DATA_START?SSD1306XLED
+  +--> ?PR?_SSD1306_SEND_BYTE?SSD1306XLED
+  +--> ?PR?SSD1306_SEND_DATA_STOP?SSD1306XLED
+
+
+
+SYMBOL TABLE OF MODULE:  .\Objects\Tiny_Stc_Breakout (?C_STARTUP)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        ?C_STARTUP
+  C:1DCAH         SEGMENT       ?C_C51STARTUP
+  I:0022H         SEGMENT       ?STACK
+  C:0000H         PUBLIC        ?C_STARTUP
+  D:00E0H         SYMBOL        ACC
+  D:00F0H         SYMBOL        B
+  D:0083H         SYMBOL        DPH
+  D:0082H         SYMBOL        DPL
+  N:0000H         SYMBOL        IBPSTACK
+  N:0100H         SYMBOL        IBPSTACKTOP
+  N:0080H         SYMBOL        IDATALEN
+  C:1DCDH         SYMBOL        IDATALOOP
+  N:0000H         SYMBOL        PBPSTACK
+  N:0100H         SYMBOL        PBPSTACKTOP
+  N:0000H         SYMBOL        PDATALEN
+  N:0000H         SYMBOL        PDATASTART
+  N:0000H         SYMBOL        PPAGE
+  N:0000H         SYMBOL        PPAGEENABLE
+  D:00A0H         SYMBOL        PPAGE_SFR
+  D:0081H         SYMBOL        SP
+  C:1DCAH         SYMBOL        STARTUP1
+  N:0000H         SYMBOL        XBPSTACK
+  N:0000H         SYMBOL        XBPSTACKTOP
+  N:0000H         SYMBOL        XDATALEN
+  N:0000H         SYMBOL        XDATASTART
+  C:0000H         LINE#         126
+  C:1DCAH         LINE#         133
+  C:1DCCH         LINE#         134
+  C:1DCDH         LINE#         135
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 6
+
+
+  C:1DCEH         LINE#         136
+  C:1DD0H         LINE#         185
+  C:1DD3H         LINE#         196
+  -------         ENDMOD        ?C_STARTUP
+
+  -------         MODULE        SSD1306XLED
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:00B2H         PUBLIC        P3M0
+  D:0090H         PUBLIC        P1
+  D:00B1H         PUBLIC        P3M1
+  D:00A0H         PUBLIC        P2
+  D:00CAH         PUBLIC        P5M0
+  D:00B0H         PUBLIC        P3
+  D:00C9H         PUBLIC        P5M1
+  D:00C0H         PUBLIC        P4
+  C:2052H         PUBLIC        _random
+  D:00C8H         PUBLIC        P5
+  D:00E8H         PUBLIC        P6
+  B:00A8H.7       PUBLIC        EA
+  D:00F8H         PUBLIC        P7
+  D:00BAH         PUBLIC        P_SW2
+  C:2145H         PUBLIC        millis
+  D:00A8H         PUBLIC        IE
+  C:1FABH         PUBLIC        _delay
+  C:217EH         PUBLIC        Wait
+  D:00B8H         PUBLIC        IP
+  C:207EH         PUBLIC        _ssd1306_setpos
+  C:1E56H         PUBLIC        _beep
+  D:00D8H         PUBLIC        CCON
+  C:21BEH         PUBLIC        system_sleep
+  C:2025H         PUBLIC        _ssd1306_fillscreen
+  C:2120H         PUBLIC        Timer0_Init
+  C:1B4AH         PUBLIC        ssd1306_init
+  C:20F3H         PUBLIC        _itoa
+  C:0003H         PUBLIC        ssd1306_send_data_start
+  B:00B0H.0       PUBLIC        P30
+  D:0098H         PUBLIC        SCON
+  D:0089H         PUBLIC        TMOD
+  D:0088H         PUBLIC        TCON
+  B:00C8H.4       PUBLIC        P54
+  C:2178H         PUBLIC        _ssd1306_send_byte
+  C:21B5H         PUBLIC        ssd1306_xfer_start
+  D:00F0H         PUBLIC        B
+  D:008EH         PUBLIC        AUXR
+  C:210AH         PUBLIC        _IIC_Write
+  C:1F60H         PUBLIC        Timer0_Isr
+  C:218DH         PUBLIC        IIC_Ack
+  C:1A87H         PUBLIC        _ssd1306_char_f6x8
+  C:2196H         PUBLIC        IIC_Start
+  D:00E0H         PUBLIC        ACC
+  C:1817H         SYMBOL        ssd1306xled_font6x8
+  C:1C92H         PUBLIC        waitStart
+  C:1D2FH         PUBLIC        _ssd1306_draw_bmp
+  B:00A8H.1       PUBLIC        ET0
+  C:21BBH         PUBLIC        ssd1306_send_data_stop
+  B:0088H.5       PUBLIC        TF0
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 7
+
+
+  D:008CH         PUBLIC        TH0
+  D:008AH         PUBLIC        TL0
+  B:0088H.4       PUBLIC        TR0
+  X:008BH         PUBLIC        timeCnt
+  C:21B8H         PUBLIC        ssd1306_xfer_stop
+  C:2163H         PUBLIC        _IIC_WriteByte
+  C:21B0H         PUBLIC        _pgm_read_byte
+  C:219FH         PUBLIC        IIC_Stop
+  C:2135H         PUBLIC        _ssd1306_send_command
+  D:00D0H         PUBLIC        PSW
+  -------         PROC          WAITSTART
+  -------         DO            
+  X:000CH         SYMBOL        waitFrame
+  -------         ENDDO         
+  C:1C92H         LINE#         14
+  C:1C92H         LINE#         15
+  C:1C92H         LINE#         16
+  C:1C94H         LINE#         17
+  C:1C9AH         LINE#         18
+  C:1C9AH         LINE#         19
+  C:1CCEH         LINE#         20
+  C:1CE2H         LINE#         21
+  C:1CE4H         LINE#         22
+  C:1D1AH         LINE#         23
+  C:1D1EH         LINE#         25
+  C:1D20H         LINE#         26
+  C:1D20H         LINE#         27
+  C:1D2BH         LINE#         29
+  C:1D2BH         LINE#         31
+  C:1D2EH         LINE#         32
+  -------         ENDPROC       WAITSTART
+  -------         PROC          _ITOA
+  D:0006H         SYMBOL        value
+  D:0001H         SYMBOL        s
+  X:0011H         SYMBOL        base
+  C:20F3H         LINE#         34
+  C:20F3H         LINE#         35
+  C:20F3H         LINE#         36
+  -------         ENDPROC       _ITOA
+  -------         PROC          SYSTEM_SLEEP
+  C:21BEH         LINE#         39
+  C:21BEH         LINE#         41
+  -------         ENDPROC       SYSTEM_SLEEP
+  -------         PROC          _BEEP
+  X:000CH         SYMBOL        bCount
+  X:000EH         SYMBOL        bDelay
+  -------         DO            
+  D:0006H         SYMBOL        i
+  D:0004H         SYMBOL        i2
+  -------         ENDDO         
+  C:1E56H         LINE#         43
+  C:1E64H         LINE#         45
+  C:1E7AH         LINE#         46
+  C:1E7AH         LINE#         47
+  C:1E7CH         LINE#         48
+  C:1E92H         LINE#         49
+  C:1E92H         LINE#         50
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 8
+
+
+  C:1E94H         LINE#         51
+  C:1E9BH         LINE#         53
+  C:1E9DH         LINE#         54
+  C:1EB3H         LINE#         55
+  C:1EB3H         LINE#         56
+  C:1EB5H         LINE#         57
+  C:1EBCH         LINE#         58
+  C:1EC3H         LINE#         59
+  -------         ENDPROC       _BEEP
+  -------         PROC          TIMER0_ISR
+  C:1F60H         LINE#         61
+  C:1F77H         LINE#         63
+  C:1F96H         LINE#         64
+  -------         ENDPROC       TIMER0_ISR
+  -------         PROC          TIMER0_INIT
+  C:2120H         LINE#         66
+  C:2120H         LINE#         67
+  C:2120H         LINE#         68
+  C:2123H         LINE#         69
+  C:2126H         LINE#         70
+  C:2129H         LINE#         71
+  C:212CH         LINE#         72
+  C:212EH         LINE#         73
+  C:2130H         LINE#         74
+  C:2132H         LINE#         75
+  C:2134H         LINE#         76
+  -------         ENDPROC       TIMER0_INIT
+  -------         PROC          MILLIS
+  C:2145H         LINE#         78
+  C:2145H         LINE#         79
+  C:2145H         LINE#         80
+  C:2153H         LINE#         81
+  -------         ENDPROC       MILLIS
+  -------         PROC          _RANDOM
+  X:000CH         SYMBOL        a
+  X:000EH         SYMBOL        b
+  C:2052H         LINE#         83
+  C:2060H         LINE#         84
+  C:2060H         LINE#         85
+  C:207DH         LINE#         86
+  -------         ENDPROC       _RANDOM
+  -------         PROC          _DELAY
+  X:000CH         SYMBOL        ms
+  -------         DO            
+  X:000EH         SYMBOL        startCnt
+  -------         ENDDO         
+  C:1FABH         LINE#         88
+  C:1FB3H         LINE#         89
+  C:1FB3H         LINE#         90
+  C:1FBCH         LINE#         91
+  C:1FF4H         LINE#         92
+  -------         ENDPROC       _DELAY
+  -------         PROC          WAIT
+  C:217EH         LINE#         94
+  C:217EH         LINE#         95
+  C:217EH         LINE#         96
+  C:2185H         LINE#         97
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 9
+
+
+  C:2189H         LINE#         98
+  -------         ENDPROC       WAIT
+  -------         PROC          IIC_START
+  C:2196H         LINE#         100
+  C:2196H         LINE#         101
+  C:219CH         LINE#         102
+  -------         ENDPROC       IIC_START
+  -------         PROC          L?0078
+  -------         ENDPROC       L?0078
+  -------         PROC          IIC_ACK
+  C:218DH         LINE#         106
+  C:218DH         LINE#         107
+  C:2193H         LINE#         108
+  -------         ENDPROC       IIC_ACK
+  -------         PROC          IIC_STOP
+  C:219FH         LINE#         111
+  C:219FH         LINE#         112
+  C:21A5H         LINE#         113
+  -------         ENDPROC       IIC_STOP
+  -------         PROC          _IIC_WRITEBYTE
+  D:0007H         SYMBOL        IIC_Data
+  C:2163H         LINE#         117
+  C:2163H         LINE#         118
+  C:2168H         LINE#         119
+  C:216EH         LINE#         120
+  -------         ENDPROC       _IIC_WRITEBYTE
+  -------         PROC          _IIC_WRITE
+  D:0007H         SYMBOL        DevAddr
+  D:0005H         SYMBOL        Cmd
+  D:0003H         SYMBOL        dat
+  C:210AH         LINE#         127
+  C:210AH         LINE#         128
+  C:210DH         LINE#         129
+  C:210DH         LINE#         130
+  C:2110H         LINE#         131
+  C:2112H         LINE#         132
+  C:2115H         LINE#         134
+  C:211AH         LINE#         135
+  C:211DH         LINE#         137
+  -------         ENDPROC       _IIC_WRITE
+  -------         PROC          SSD1306_INIT
+  C:1B4AH         LINE#         142
+  C:1B4AH         LINE#         143
+  C:1B4DH         LINE#         144
+  C:1B4FH         LINE#         145
+  C:1B51H         LINE#         146
+  C:1B53H         LINE#         147
+  C:1B56H         LINE#         148
+  C:1B5CH         LINE#         150
+  C:1B61H         LINE#         151
+  C:1B64H         LINE#         152
+  C:1B69H         LINE#         153
+  C:1B6EH         LINE#         154
+  C:1B73H         LINE#         155
+  C:1B78H         LINE#         156
+  C:1B7DH         LINE#         157
+  C:1B82H         LINE#         158
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 10
+
+
+  C:1B87H         LINE#         159
+  C:1B8CH         LINE#         160
+  C:1B91H         LINE#         161
+  C:1B96H         LINE#         162
+  C:1B9BH         LINE#         163
+  C:1BA0H         LINE#         164
+  C:1BA5H         LINE#         165
+  C:1BAAH         LINE#         166
+  C:1BAFH         LINE#         167
+  C:1BB4H         LINE#         168
+  C:1BB9H         LINE#         169
+  C:1BBEH         LINE#         170
+  C:1BC3H         LINE#         171
+  C:1BC8H         LINE#         172
+  C:1BCDH         LINE#         173
+  C:1BD2H         LINE#         174
+  C:1BD7H         LINE#         175
+  C:1BDCH         LINE#         176
+  C:1BE1H         LINE#         177
+  C:1BE6H         LINE#         178
+  C:1BEBH         LINE#         179
+  -------         ENDPROC       SSD1306_INIT
+  -------         PROC          SSD1306_XFER_START
+  C:21B5H         LINE#         182
+  C:21B5H         LINE#         183
+  -------         ENDPROC       SSD1306_XFER_START
+  -------         PROC          SSD1306_XFER_STOP
+  C:21B8H         LINE#         186
+  C:21B8H         LINE#         187
+  -------         ENDPROC       SSD1306_XFER_STOP
+  C:2173H         SYMBOL        L?0077
+  -------         PROC          L?0076
+  -------         ENDPROC       L?0076
+  C:2173H         SYMBOL        L?0077
+  -------         PROC          _SSD1306_SEND_BYTE
+  D:0007H         SYMBOL        b
+  C:2178H         LINE#         190
+  C:2178H         LINE#         191
+  C:217BH         LINE#         192
+  -------         ENDPROC       _SSD1306_SEND_BYTE
+  -------         PROC          _SSD1306_SEND_COMMAND
+  D:0006H         SYMBOL        command
+  C:2135H         LINE#         195
+  C:2135H         LINE#         196
+  C:2135H         LINE#         197
+  C:2138H         LINE#         198
+  C:213DH         LINE#         199
+  C:2142H         LINE#         200
+  -------         ENDPROC       _SSD1306_SEND_COMMAND
+  -------         PROC          SSD1306_SEND_DATA_START
+  C:0003H         LINE#         203
+  C:0003H         LINE#         204
+  C:0003H         LINE#         205
+  C:0006H         LINE#         206
+  -------         ENDPROC       SSD1306_SEND_DATA_START
+  -------         PROC          SSD1306_SEND_DATA_STOP
+  C:21BBH         LINE#         209
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 11
+
+
+  C:21BBH         LINE#         210
+  -------         ENDPROC       SSD1306_SEND_DATA_STOP
+  -------         PROC          _SSD1306_SETPOS
+  D:0006H         SYMBOL        x
+  D:0005H         SYMBOL        y
+  C:207EH         LINE#         213
+  C:207EH         LINE#         214
+  C:207EH         LINE#         215
+  C:207EH         LINE#         216
+  C:2081H         LINE#         217
+  C:2086H         LINE#         219
+  C:208DH         LINE#         220
+  C:2099H         LINE#         221
+  C:20A2H         LINE#         223
+  -------         ENDPROC       _SSD1306_SETPOS
+  -------         PROC          _SSD1306_FILLSCREEN
+  D:0005H         SYMBOL        fill_Data
+  -------         DO            
+  D:0004H         SYMBOL        m
+  D:0006H         SYMBOL        n
+  -------         ENDDO         
+  C:2025H         LINE#         226
+  C:2027H         LINE#         228
+  C:2029H         LINE#         229
+  C:2029H         LINE#         230
+  C:2030H         LINE#         231
+  C:2035H         LINE#         232
+  C:203AH         LINE#         233
+  C:203DH         LINE#         234
+  C:203FH         LINE#         235
+  C:203FH         LINE#         236
+  C:2044H         LINE#         237
+  C:2049H         LINE#         238
+  C:204CH         LINE#         239
+  C:2051H         LINE#         240
+  -------         ENDPROC       _SSD1306_FILLSCREEN
+  -------         PROC          _SSD1306_CHAR_F6X8
+  X:0010H         SYMBOL        x
+  X:0011H         SYMBOL        y
+  X:0012H         SYMBOL        ch
+  -------         DO            
+  X:0015H         SYMBOL        c
+  X:0016H         SYMBOL        i
+  X:0017H         SYMBOL        j
+  -------         ENDDO         
+  C:1A87H         LINE#         244
+  C:1A98H         LINE#         245
+  C:1A9DH         LINE#         246
+  C:1AB9H         LINE#         247
+  C:1AB9H         LINE#         248
+  C:1ABFH         LINE#         249
+  C:1AC8H         LINE#         250
+  C:1AD5H         LINE#         251
+  C:1AE2H         LINE#         252
+  C:1AEBH         LINE#         253
+  C:1AEBH         LINE#         254
+  C:1AEDH         LINE#         255
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 12
+
+
+  C:1AF1H         LINE#         256
+  C:1AF1H         LINE#         257
+  C:1AFCH         LINE#         258
+  C:1AFFH         LINE#         259
+  C:1B0EH         LINE#         260
+  C:1B0EH         LINE#         261
+  C:1B2EH         LINE#         262
+  C:1B36H         LINE#         263
+  C:1B39H         LINE#         264
+  C:1B40H         LINE#         265
+  C:1B46H         LINE#         266
+  C:1B49H         LINE#         267
+  -------         ENDPROC       _SSD1306_CHAR_F6X8
+  -------         PROC          _SSD1306_DRAW_BMP
+  X:0080H         SYMBOL        x0
+  D:0005H         SYMBOL        y0
+  X:0082H         SYMBOL        x1
+  X:0083H         SYMBOL        y1
+  X:0084H         SYMBOL        bitmap
+  -------         DO            
+  X:0087H         SYMBOL        j
+  X:0089H         SYMBOL        y
+  -------         DO            
+  X:008AH         SYMBOL        x
+  -------         ENDDO         
+  -------         ENDDO         
+  C:1D2FH         LINE#         269
+  C:1D39H         LINE#         270
+  C:1D39H         LINE#         271
+  C:1D40H         LINE#         273
+  C:1D51H         LINE#         274
+  C:1D5FH         LINE#         275
+  C:1D72H         LINE#         276
+  C:1D72H         LINE#         278
+  C:1D7AH         LINE#         279
+  C:1D7DH         LINE#         280
+  C:1D92H         LINE#         281
+  C:1D92H         LINE#         282
+  C:1DB6H         LINE#         283
+  C:1DBEH         LINE#         284
+  C:1DC1H         LINE#         285
+  C:1DC9H         LINE#         286
+  -------         ENDPROC       _SSD1306_DRAW_BMP
+  -------         PROC          _PGM_READ_BYTE
+  D:0001H         SYMBOL        p
+  C:21B0H         LINE#         288
+  C:21B0H         LINE#         289
+  C:21B0H         LINE#         290
+  C:21B4H         LINE#         291
+  -------         ENDPROC       _PGM_READ_BYTE
+  -------         ENDMOD        SSD1306XLED
+
+  -------         MODULE        MAIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  D:0090H         PUBLIC        P1
+  D:00A0H         PUBLIC        P2
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 13
+
+
+  D:00B0H         PUBLIC        P3
+  D:00C0H         PUBLIC        P4
+  D:00C8H         PUBLIC        P5
+  D:00E8H         PUBLIC        P6
+  D:00F8H         PUBLIC        P7
+  X:0042H         PUBLIC        row1
+  X:0052H         PUBLIC        row2
+  X:0062H         PUBLIC        row3
+  D:00A8H         PUBLIC        IE
+  X:0072H         PUBLIC        player
+  X:0073H         PUBLIC        ballx
+  X:0074H         PUBLIC        bally
+  D:00B8H         PUBLIC        IP
+  C:1EC4H         PUBLIC        _sendBlock
+  X:0075H         PUBLIC        score
+  C:1BF0H         PUBLIC        resetGame
+  D:00D8H         PUBLIC        CCON
+  X:0077H         PUBLIC        lastFrame
+  C:21A8H         PUBLIC        main
+  X:007BH         PUBLIC        hdir
+  C:2154H         PUBLIC        setup
+  B:00B0H.1       PUBLIC        P31
+  D:0098H         PUBLIC        SCON
+  D:0088H         PUBLIC        TCON
+  X:007DH         PUBLIC        vdir
+  B:00C8H.5       PUBLIC        P55
+  C:0814H         PUBLIC        loop
+  D:00F0H         PUBLIC        B
+  C:17F4H         SYMBOL        _?ix1000
+  D:00E0H         PUBLIC        ACC
+  C:1674H         SYMBOL        ssd1306xled_font6x8
+  C:13E6H         PUBLIC        collision
+  X:007FH         PUBLIC        platformWidth
+  D:00D0H         PUBLIC        PSW
+  C:1FF5H         PUBLIC        drawPlatform
+  -------         PROC          MAIN
+  C:21A8H         LINE#         70
+  C:21A8H         LINE#         71
+  C:21A8H         LINE#         73
+  C:21ABH         LINE#         74
+  C:21ABH         LINE#         75
+  C:21ABH         LINE#         76
+  C:21AEH         LINE#         77
+  -------         ENDPROC       MAIN
+  -------         PROC          SETUP
+  C:2154H         LINE#         80
+  C:2154H         LINE#         81
+  C:2157H         LINE#         83
+  C:215AH         LINE#         84
+  -------         ENDPROC       SETUP
+  -------         PROC          LOOP
+  -------         DO            
+  C:0B54H         SYMBOL        collisionCheck
+  -------         DO            
+  X:0000H         SYMBOL        i
+  X:0002H         SYMBOL        bl
+  X:0004H         SYMBOL        t
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 14
+
+
+  X:0006H         SYMBOL        temp
+  -------         DO            
+  X:000AH         SYMBOL        topScore
+  X:000AH         SYMBOL        i
+  -------         ENDDO         
+  -------         DO            
+  X:000AH         SYMBOL        i
+  -------         ENDDO         
+  -------         ENDDO         
+  -------         ENDDO         
+  C:0814H         LINE#         88
+  C:0814H         LINE#         89
+  C:081BH         LINE#         99
+  C:081BH         LINE#         101
+  C:082EH         LINE#         102
+  C:0837H         LINE#         104
+  C:086FH         LINE#         105
+  C:0896H         LINE#         108
+  C:08F2H         LINE#         109
+  C:094EH         LINE#         113
+  C:099EH         LINE#         114
+  C:09A5H         LINE#         115
+  C:09B0H         LINE#         116
+  C:09B8H         LINE#         118
+  C:09D4H         LINE#         119
+  C:09D9H         LINE#         120
+  C:09E6H         LINE#         121
+  C:09F3H         LINE#         123
+  C:0A0AH         LINE#         124
+  C:0A17H         LINE#         125
+  C:0A24H         LINE#         126
+  C:0A3BH         LINE#         127
+  C:0A48H         LINE#         128
+  C:0A61H         LINE#         129
+  C:0A79H         LINE#         130
+  C:0A89H         LINE#         131
+  C:0A90H         LINE#         132
+  C:0A93H         LINE#         133
+  C:0A96H         LINE#         134
+  C:0AD5H         LINE#         135
+  C:0ADCH         LINE#         136
+  C:0B1BH         LINE#         137
+  C:0B22H         LINE#         138
+  C:0B41H         LINE#         139
+  C:0B54H         LINE#         140
+  C:0B54H         LINE#         142
+  C:0B54H         LINE#         143
+  C:0B83H         LINE#         144
+  C:0BB8H         LINE#         145
+  C:0BBBH         LINE#         146
+  C:0BBBH         LINE#         147
+  C:0BEBH         LINE#         148
+  C:0C20H         LINE#         149
+  C:0C22H         LINE#         150
+  C:0C22H         LINE#         151
+  C:0C50H         LINE#         152
+  C:0C81H         LINE#         153
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 15
+
+
+  C:0C87H         LINE#         154
+  C:0C87H         LINE#         155
+  C:0C87H         LINE#         158
+  C:0C9AH         LINE#         160
+  C:0CA8H         LINE#         161
+  C:0CCFH         LINE#         162
+  C:0CD7H         LINE#         163
+  C:0CD7H         LINE#         171
+  C:0CDDH         LINE#         172
+  C:0CE0H         LINE#         173
+  C:0CF9H         LINE#         174
+  C:0D07H         LINE#         175
+  C:0D09H         LINE#         176
+  C:0D0BH         LINE#         177
+  C:0D10H         LINE#         178
+  C:0D10H         LINE#         179
+  C:0D20H         LINE#         180
+  C:0D23H         LINE#         181
+  C:0D2AH         LINE#         182
+  C:0D2DH         LINE#         183
+  C:0D46H         LINE#         184
+  C:0D54H         LINE#         185
+  C:0D56H         LINE#         186
+  C:0D58H         LINE#         187
+  C:0D5DH         LINE#         188
+  C:0D5DH         LINE#         189
+  C:0D6DH         LINE#         190
+  C:0D70H         LINE#         191
+  C:0D77H         LINE#         192
+  C:0D7AH         LINE#         193
+  C:0D93H         LINE#         194
+  C:0DA1H         LINE#         195
+  C:0DA3H         LINE#         196
+  C:0DA5H         LINE#         197
+  C:0DAAH         LINE#         198
+  C:0DAAH         LINE#         199
+  C:0DBAH         LINE#         200
+  C:0DBDH         LINE#         203
+  C:0DC4H         LINE#         204
+  C:0DC7H         LINE#         205
+  C:0DCEH         LINE#         206
+  C:0DD3H         LINE#         207
+  C:0DF2H         LINE#         208
+  C:0DF5H         LINE#         209
+  C:0DFCH         LINE#         210
+  C:0DFFH         LINE#         211
+  C:0E06H         LINE#         212
+  C:0E0BH         LINE#         213
+  C:0E2AH         LINE#         214
+  C:0E2DH         LINE#         215
+  C:0E34H         LINE#         216
+  C:0E37H         LINE#         217
+  C:0E3EH         LINE#         218
+  C:0E43H         LINE#         219
+  C:0E62H         LINE#         220
+  C:0E65H         LINE#         221
+  C:0E6CH         LINE#         222
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 16
+
+
+  C:0E6FH         LINE#         223
+  C:0E76H         LINE#         224
+  C:0E7BH         LINE#         225
+  C:0E9AH         LINE#         226
+  C:0E9DH         LINE#         227
+  C:0EA4H         LINE#         228
+  C:0EA7H         LINE#         229
+  C:0EAEH         LINE#         230
+  C:0EB3H         LINE#         231
+  C:0ED2H         LINE#         232
+  C:0ED5H         LINE#         235
+  C:0EE6H         LINE#         236
+  C:0EEEH         LINE#         237
+  C:0EF1H         LINE#         238
+  C:0F15H         LINE#         239
+  C:0F18H         LINE#         240
+  C:0F1BH         LINE#         242
+  C:0F1EH         LINE#         243
+  -------         ENDPROC       LOOP
+  -------         PROC          RESETGAME
+  -------         DO            
+  D:0007H         SYMBOL        i
+  -------         ENDDO         
+  C:1BF0H         LINE#         250
+  C:1BF0H         LINE#         252
+  C:1BF5H         LINE#         253
+  C:1C02H         LINE#         255
+  C:1C0FH         LINE#         256
+  C:1C12H         LINE#         259
+  C:1C19H         LINE#         260
+  C:1C1BH         LINE#         261
+  C:1C42H         LINE#         262
+  C:1C47H         LINE#         263
+  C:1C4DH         LINE#         264
+  C:1C53H         LINE#         265
+  C:1C57H         LINE#         266
+  C:1C5FH         LINE#         267
+  C:1C63H         LINE#         268
+  C:1C6AH         LINE#         269
+  C:1C83H         LINE#         270
+  C:1C91H         LINE#         271
+  -------         ENDPROC       RESETGAME
+  -------         PROC          COLLISION
+  C:13E6H         LINE#         273
+  C:13E6H         LINE#         274
+  C:1426H         LINE#         275
+  C:1457H         LINE#         276
+  C:1498H         LINE#         277
+  C:14C4H         LINE#         278
+  C:1503H         LINE#         279
+  C:1535H         LINE#         280
+  C:1576H         LINE#         281
+  C:15A8H         LINE#         282
+  C:15C9H         LINE#         283
+  C:15C9H         LINE#         284
+  C:15CFH         LINE#         285
+  C:15D4H         LINE#         286
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 17
+
+
+  C:15F5H         LINE#         287
+  C:15F9H         LINE#         288
+  C:15FFH         LINE#         289
+  C:1607H         LINE#         290
+  C:1609H         LINE#         291
+  C:1631H         LINE#         292
+  C:1631H         LINE#         294
+  -------         ENDPROC       COLLISION
+  -------         PROC          DRAWPLATFORM
+  -------         DO            
+  X:000CH         SYMBOL        pw
+  -------         ENDDO         
+  C:1FF5H         LINE#         297
+  C:1FF5H         LINE#         300
+  C:1FFFH         LINE#         301
+  C:2002H         LINE#         302
+  C:2022H         LINE#         303
+  -------         ENDPROC       DRAWPLATFORM
+  -------         PROC          _SENDBLOCK
+  D:0007H         SYMBOL        fill
+  C:1EC4H         LINE#         306
+  C:1EC4H         LINE#         307
+  C:1EC9H         LINE#         308
+  C:1ECDH         LINE#         309
+  C:1ED2H         LINE#         310
+  C:1ED7H         LINE#         311
+  C:1EDCH         LINE#         312
+  C:1EE1H         LINE#         313
+  C:1EE6H         LINE#         314
+  C:1EE8H         LINE#         315
+  C:1EE8H         LINE#         316
+  C:1EEAH         LINE#         317
+  C:1EEFH         LINE#         318
+  C:1EF4H         LINE#         319
+  C:1EF9H         LINE#         320
+  C:1EFEH         LINE#         321
+  C:1F03H         LINE#         322
+  C:1F08H         LINE#         323
+  C:1F0DH         LINE#         324
+  C:1F12H         LINE#         325
+  C:1F12H         LINE#         326
+  -------         ENDPROC       _SENDBLOCK
+  -------         ENDMOD        MAIN
+
+  -------         MODULE        ?C?FPCMP
+  C:0010H         PUBLIC        ?C?FPCMP
+  C:000EH         PUBLIC        ?C?FPCMP3
+  -------         ENDMOD        ?C?FPCMP
+
+  -------         MODULE        ?C?FCAST
+  C:0091H         PUBLIC        ?C?FCASTC
+  C:008CH         PUBLIC        ?C?FCASTI
+  C:0087H         PUBLIC        ?C?FCASTL
+  -------         ENDMOD        ?C?FCAST
+
+  -------         MODULE        PRINTF
+  X:0012H         PUBLIC        ?_PRINTF?BYTE
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 18
+
+
+  X:0012H         PUBLIC        ?_SPRINTF?BYTE
+  C:0FCEH         PUBLIC        _PRINTF
+  C:0FC8H         PUBLIC        _SPRINTF
+  -------         ENDMOD        PRINTF
+
+  -------         MODULE        FLOOR
+  C:1997H         PUBLIC        _floor
+  -------         ENDMOD        FLOOR
+
+  -------         MODULE        ?C?FPADD
+  C:00CCH         PUBLIC        ?C?FPADD
+  C:00C8H         PUBLIC        ?C?FPSUB
+  -------         ENDMOD        ?C?FPADD
+
+  -------         MODULE        ?C?CASTF
+  C:01BDH         PUBLIC        ?C?CASTF
+  -------         ENDMOD        ?C?CASTF
+
+  -------         MODULE        ?C?FPROUND
+  C:01F4H         PUBLIC        ?C?FPROUND
+  -------         ENDMOD        ?C?FPROUND
+
+  -------         MODULE        ?C?FPCONVERT
+  C:0231H         PUBLIC        ?C?FPCONVERT
+  -------         ENDMOD        ?C?FPCONVERT
+
+  -------         MODULE        ?C?FPMUL
+  C:0380H         PUBLIC        ?C?FPMUL
+  -------         ENDMOD        ?C?FPMUL
+
+  -------         MODULE        ?C?FPDIV
+  C:0489H         PUBLIC        ?C?FPDIV
+  -------         ENDMOD        ?C?FPDIV
+
+  -------         MODULE        ?C?FTNPWR
+  C:0556H         PUBLIC        ?C?FTNPWR
+  -------         ENDMOD        ?C?FTNPWR
+
+  -------         MODULE        ?C?COPY
+  C:0666H         PUBLIC        ?C?COPY
+  -------         ENDMOD        ?C?COPY
+
+  -------         MODULE        ?C?CLDPTR
+  C:068CH         PUBLIC        ?C?CLDPTR
+  -------         ENDMOD        ?C?CLDPTR
+
+  -------         MODULE        ?C?CLDOPTR
+  C:06A5H         PUBLIC        ?C?CLDOPTR
+  -------         ENDMOD        ?C?CLDOPTR
+
+  -------         MODULE        ?C?CSTPTR
+  C:06D2H         PUBLIC        ?C?CSTPTR
+  -------         ENDMOD        ?C?CSTPTR
+
+  -------         MODULE        ?C?IMUL
+  C:06E4H         PUBLIC        ?C?IMUL
+  -------         ENDMOD        ?C?IMUL
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 19
+
+
+
+  -------         MODULE        ?C?SIDIV
+  C:06F6H         PUBLIC        ?C?SIDIV
+  -------         ENDMOD        ?C?SIDIV
+
+  -------         MODULE        ?C?ILDIX
+  C:072CH         PUBLIC        ?C?ILDIX
+  -------         ENDMOD        ?C?ILDIX
+
+  -------         MODULE        ?C?LNEG
+  C:0742H         PUBLIC        ?C?LNEG
+  -------         ENDMOD        ?C?LNEG
+
+  -------         MODULE        ?C?ULCMP
+  C:0750H         PUBLIC        ?C?ULCMP
+  -------         ENDMOD        ?C?ULCMP
+
+  -------         MODULE        ?C?LSTXDATA
+  C:0761H         PUBLIC        ?C?LSTXDATA
+  -------         ENDMOD        ?C?LSTXDATA
+
+  -------         MODULE        ?C?PLDIXDATA
+  C:076DH         PUBLIC        ?C?PLDIXDATA
+  -------         ENDMOD        ?C?PLDIXDATA
+
+  -------         MODULE        ?C?PSTXDATA
+  C:0784H         PUBLIC        ?C?PSTXDATA
+  -------         ENDMOD        ?C?PSTXDATA
+
+  -------         MODULE        ?C?CCASE
+  C:078DH         PUBLIC        ?C?CCASE
+  -------         ENDMOD        ?C?CCASE
+
+  -------         MODULE        PUTCHAR
+  C:20CCH         PUBLIC        _PUTCHAR
+  -------         ENDMOD        PUTCHAR
+
+  -------         MODULE        RAND
+  X:008FH         PUBLIC        ?SRAND?BYTE
+  C:1F13H         PUBLIC        RAND
+  C:1F51H         PUBLIC        _SRAND
+  -------         ENDMOD        RAND
+
+  -------         MODULE        ?C?UIDIV
+  C:07B3H         PUBLIC        ?C?UIDIV
+  -------         ENDMOD        ?C?UIDIV
+
+  -------         MODULE        ?C?LLDXDATA
+  C:0808H         PUBLIC        ?C?LLDXDATA
+  -------         ENDMOD        ?C?LLDXDATA
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_IIC_WRITE?SSD1306XLED
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SSD1306_DRAW_BMP?SSD1306XLED
+
+BL51 BANKED LINKER/LOCATER V6.22.4.0                                                  05/22/2025  09:16:29  PAGE 20
+
+
+Program Size: data=15.1 xdata=147 code=8639
+LINK/LOCATE RUN COMPLETE.  2 WARNING(S),  0 ERROR(S)

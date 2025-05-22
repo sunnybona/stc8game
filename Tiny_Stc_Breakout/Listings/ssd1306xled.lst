@@ -1,0 +1,327 @@
+C51 COMPILER V9.60.7.0   SSD1306XLED                                                       05/22/2025 09:16:29 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE SSD1306XLED
+OBJECT MODULE PLACED IN .\Objects\ssd1306xled.obj
+COMPILER INVOKED BY: D:\Program Files\Keil_v5\C51\BIN\C51.EXE ssd1306xled.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTE
+                    -XTEND PRINT(.\Listings\ssd1306xled.lst) OBJECT(.\Objects\ssd1306xled.obj)
+
+line level    source
+
+   1          #include <STC8G.H>
+   2          
+   3          #include "ssd1306xled.h"
+   4          #include "font6x8.h"
+   5          #include <stdlib.h>
+   6          #include <intrins.h>
+   7          #include <stdio.h>
+   8          
+   9          #define FOSC 24000000UL
+  10          #define T1M (65536-FOSC/1000)
+  11          unsigned long timeCnt;
+  12          
+  13          
+  14          void waitStart()
+  15          {
+  16   1        unsigned long waitFrame=timeCnt;
+  17   1        while(ACT==1)
+  18   1        {
+  19   2                if(timeCnt-waitFrame>2000){
+  20   3                        waitFrame=timeCnt;
+  21   3                }
+  22   2                else if(timeCnt-waitFrame>1000) {
+  23   3                        ssd1306_char_f6x8(20, 4, "press A start");
+  24   3                        
+  25   3                }
+  26   2                else{
+  27   3                 ssd1306_char_f6x8(20, 4, "             ");
+  28   3                 
+  29   3                }
+  30   2                
+  31   2        }
+  32   1      }
+  33          
+  34          void itoa(int value,char *s,unsigned char base)
+  35          {
+  36   1              sprintf(s,"%d",value);
+  37   1      }
+*** WARNING C280 IN LINE 34 OF ssd1306xled.c: 'base': unreferenced local variable
+  38                  
+  39          void system_sleep() {
+  40   1       
+  41   1      }
+  42          
+  43          void beep(int bCount,int bDelay){
+  44   1              int i,i2;
+  45   1        for (i = 0; i<=bCount; i++)
+  46   1              {
+  47   2                      SPEAKER=1;
+  48   2                      for(i2=0; i2<bDelay; i2++)
+  49   2                {
+  50   3                     _nop_();_nop_();
+  51   3                      }
+  52   2                     
+  53   2                SPEAKER=0;
+C51 COMPILER V9.60.7.0   SSD1306XLED                                                       05/22/2025 09:16:29 PAGE 2   
+
+  54   2                for(i2=0; i2<bDelay; i2++)
+  55   2                {
+  56   3                    _nop_();_nop_();
+  57   3                }
+  58   2              }
+  59   1      }
+  60          
+  61          void Timer0_Isr(void) interrupt 1
+  62          {
+  63   1              timeCnt++;
+  64   1      }
+  65          
+  66          void Timer0_Init(void)          //1毫秒@24.000MHz
+  67          {
+  68   1              AUXR |= 0x80;                   //定时器时钟1T模式
+  69   1              TMOD &= 0xF0;                   //设置定时器模式
+  70   1              TL0 = T1M;                              //设置定时初始值
+  71   1              TH0 = T1M>>8;                           //设置定时初始值
+  72   1              TF0 = 0;                                //清除TF0标志
+  73   1              TR0 = 1;                                //定时器0开始计时
+  74   1              ET0 = 1;                                //使能定时器0中断
+  75   1              EA=1;
+  76   1      }
+  77          
+  78          unsigned long millis()
+  79          {
+  80   1              return timeCnt;
+  81   1      }
+  82          
+  83          int random(int a,int b)
+  84          {
+  85   1              return(rand()%b-a);
+  86   1      }
+  87          
+  88          void delay(unsigned int ms)
+  89          {
+  90   1              unsigned long startCnt=millis();
+  91   1              while((timeCnt-startCnt)<ms);
+  92   1      }
+  93          
+  94          void Wait()
+  95          {
+  96   1              while(!(I2CMSST & 0X40));
+  97   1              I2CMSST &= ~0X40;
+  98   1      }
+  99          
+ 100          void IIC_Start(){
+ 101   1              I2CMSCR=0X01;
+ 102   1              Wait();
+ 103   1      }
+ 104          
+ 105                  
+ 106          void IIC_Ack(){
+ 107   1              I2CMSCR=0X03;
+ 108   1              Wait();
+ 109   1      }
+ 110          
+ 111          void IIC_Stop(){
+ 112   1              I2CMSCR=0X06;
+ 113   1              Wait();
+ 114   1      }
+ 115          
+C51 COMPILER V9.60.7.0   SSD1306XLED                                                       05/22/2025 09:16:29 PAGE 3   
+
+ 116          
+ 117          void IIC_WriteByte(uint8_t IIC_Data){
+ 118   1              I2CTXD=IIC_Data;
+ 119   1              I2CMSCR=0X02;
+ 120   1              Wait();
+ 121   1              
+ 122   1              
+ 123   1      }
+ 124          
+ 125          
+ 126          
+ 127          void IIC_Write(uint8_t DevAddr,uint8_t Cmd,uint8_t dat){
+ 128   1              IIC_Start();
+ 129   1              IIC_WriteByte(DevAddr);
+ 130   1              IIC_Ack();
+ 131   1              IIC_WriteByte(Cmd);
+ 132   1              IIC_Ack();
+ 133   1              
+ 134   1              IIC_WriteByte(dat);
+ 135   1              IIC_Ack();
+ 136   1              
+ 137   1              IIC_Stop();
+ 138   1      }
+ 139          
+ 140          
+ 141          
+ 142          void ssd1306_init(void){
+ 143   1              P3M0=0X00;
+ 144   1              P3M1=0X00;
+ 145   1              P5M0=0X00;
+ 146   1              P5M1=0X00;
+ 147   1              P_SW2 =0X80;
+ 148   1        I2CCFG=0Xc1;
+ 149   1      //      I2CCFG=0Xe0;
+ 150   1              I2CMSST=0X00;
+ 151   1              Timer0_Init();
+ 152   1              ssd1306_send_command(0xAE); // display off
+ 153   1              ssd1306_send_command(0x00); // Set Memory Addressing Mode
+ 154   1              ssd1306_send_command(0x10); // 00,Horizontal Addressing Mode;01,Vertical Addressing Mode;10,Page Addressi
+             -ng Mode (RESET);11,Invalid
+ 155   1              ssd1306_send_command(0x40); // Set Page Start Address for Page Addressing Mode,0-7
+ 156   1              ssd1306_send_command(0x81); // Set COM Output Scan Direction
+ 157   1              ssd1306_send_command(0xCF); // ---set low column address
+ 158   1              ssd1306_send_command(0xA1); // ---set high column address
+ 159   1              ssd1306_send_command(0xC8); // --set start line address
+ 160   1              ssd1306_send_command(0xA6); // --set contrast control register
+ 161   1              ssd1306_send_command(0xA8);
+ 162   1              ssd1306_send_command(0x3F); // --set segment re-map 0 to 127
+ 163   1              ssd1306_send_command(0xD3); // --set normal display
+ 164   1              ssd1306_send_command(0x00); // --set multiplex ratio(1 to 64)
+ 165   1              ssd1306_send_command(0xD5); // 
+ 166   1              ssd1306_send_command(0x80); // 0xa4,Output follows RAM content;0xa5,Output ignores RAM content
+ 167   1              ssd1306_send_command(0xD9); // -set display offset
+ 168   1              ssd1306_send_command(0xF1); // -not offset
+ 169   1              ssd1306_send_command(0xDA); // --set display clock divide ratio/oscillator frequency
+ 170   1              ssd1306_send_command(0x12); // --set divide ratio
+ 171   1              ssd1306_send_command(0xDB); // --set pre-charge period
+ 172   1              ssd1306_send_command(0x40); // 
+ 173   1              ssd1306_send_command(0x20); // --set com pins hardware configuration
+ 174   1              ssd1306_send_command(0x02);
+ 175   1              ssd1306_send_command(0x8D); // --set vcomh
+ 176   1              ssd1306_send_command(0x14); // 0x20,0.77xVcc
+C51 COMPILER V9.60.7.0   SSD1306XLED                                                       05/22/2025 09:16:29 PAGE 4   
+
+ 177   1              ssd1306_send_command(0xA4); // --set DC-DC enable
+ 178   1              ssd1306_send_command(0xA6); // 
+ 179   1              ssd1306_send_command(0xAF); // --turn on oled panel 
+ 180   1      }
+ 181          
+ 182          void ssd1306_xfer_start(void){
+ 183   1              IIC_Start();
+ 184   1      }
+ 185          
+ 186          void ssd1306_xfer_stop(void){
+ 187   1              IIC_Stop();
+ 188   1      }
+ 189          
+ 190          void ssd1306_send_byte(uint8_t b){
+ 191   1              IIC_WriteByte(b);
+ 192   1              IIC_Ack();
+ 193   1      }
+ 194          
+ 195          void ssd1306_send_command(uint8_t command){
+ 196   1              ssd1306_xfer_start();
+ 197   1              ssd1306_send_byte(SSD1306_SA);  // Slave address, SA0=0
+ 198   1              ssd1306_send_byte(0x00);        // write command
+ 199   1              ssd1306_send_byte(command);
+ 200   1              ssd1306_xfer_stop();
+ 201   1      }
+ 202          
+ 203          void ssd1306_send_data_start(void){
+ 204   1              ssd1306_xfer_start();
+ 205   1              ssd1306_send_byte(SSD1306_SA);
+ 206   1              ssd1306_send_byte(0x40);        //write data
+ 207   1      }
+ 208          
+ 209          void ssd1306_send_data_stop(void){
+ 210   1              ssd1306_xfer_stop();
+ 211   1      }
+ 212          
+ 213          void ssd1306_setpos(uint8_t x, uint8_t y)
+ 214          {
+ 215   1              ssd1306_xfer_start();
+ 216   1              ssd1306_send_byte(SSD1306_SA);  //Slave address,SA0=0
+ 217   1              ssd1306_send_byte(0x00);        //write command
+ 218   1      
+ 219   1              ssd1306_send_byte(0xb0+y);
+ 220   1              ssd1306_send_byte(((x&0xf0)>>4)|0x10); // |0x10
+ 221   1              ssd1306_send_byte((x&0x0f)|0x01); // |0x01
+ 222   1      
+ 223   1              ssd1306_xfer_stop();
+ 224   1      }
+ 225          
+ 226          void ssd1306_fillscreen(uint8_t fill_Data){
+ 227   1              uint8_t m,n;
+ 228   1              for(m=0;m<8;m++)
+ 229   1              {
+ 230   2                      ssd1306_send_command(0xb0+m);   //page0-page1
+ 231   2                      ssd1306_send_command(0x00);             //low column start address
+ 232   2                      ssd1306_send_command(0x10);             //high column start address
+ 233   2                      ssd1306_send_data_start();
+ 234   2                      for(n=0;n<128;n++)
+ 235   2                      {
+ 236   3                              ssd1306_send_byte(fill_Data);
+ 237   3                      }
+ 238   2                      ssd1306_send_data_stop();
+C51 COMPILER V9.60.7.0   SSD1306XLED                                                       05/22/2025 09:16:29 PAGE 5   
+
+ 239   2              }
+ 240   1      }
+ 241          
+ 242          
+ 243          
+ 244          void ssd1306_char_f6x8(uint8_t x, uint8_t y, const char ch[]){
+ 245   1        uint8_t c,i,j=0;
+ 246   1        while(ch[j] != '\0')
+ 247   1        {
+ 248   2          c = ch[j] - 32;
+ 249   2          if (c >0) c = c - 12;
+ 250   2          if (c >15) c = c - 6;
+ 251   2          if (c>40) c=c-9;
+ 252   2          if(x>126)
+ 253   2          {
+ 254   3            x=0;
+ 255   3            y++;
+ 256   3          }
+ 257   2          ssd1306_setpos(x,y);
+ 258   2          ssd1306_send_data_start();
+ 259   2          for(i=0;i<6;i++)
+ 260   2          {
+ 261   3            ssd1306_send_byte(pgm_read_byte(&ssd1306xled_font6x8[c*6+i]));
+ 262   3          }
+ 263   2          ssd1306_send_data_stop();
+ 264   2          x += 6;
+ 265   2          j++;
+ 266   2        }
+ 267   1      }
+ 268          
+ 269          void ssd1306_draw_bmp(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, const uint8_t bitmap[])
+ 270          {
+ 271   1              uint16_t j = 0;
+ 272   1              uint8_t y;
+ 273   1              if (y1 % 8 == 0) y = y1 / 8;
+ 274   1              else y = y1 / 8 + 1;
+ 275   1              for (y = y0; y < y1; y++)
+ 276   1              {
+ 277   2                      uint8_t x;
+ 278   2                      ssd1306_setpos(x0,y);
+ 279   2                      ssd1306_send_data_start();
+ 280   2                      for (x = x0; x < x1; x++)
+ 281   2                      {
+ 282   3                              ssd1306_send_byte(~pgm_read_byte(&bitmap[j++]));
+ 283   3                      }
+ 284   2                      ssd1306_send_data_stop();
+ 285   2              }
+ 286   1      }
+ 287          
+ 288          uint8_t pgm_read_byte(uint8_t *p)
+ 289          {
+ 290   1              return *p;
+ 291   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1249    ----
+   CONSTANT SIZE    =    415    ----
+   XDATA SIZE       =      4      43
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   SSD1306XLED                                                       05/22/2025 09:16:29 PAGE 6   
+
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\ssd1306xled.obj" 
+TO ".\Objects\Frogger" 
+PRINT(".\Listings\Frogger.m51") RAMSIZE(256) 

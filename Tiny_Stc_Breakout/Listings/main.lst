@@ -1,0 +1,375 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 09:16:29 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Program Files\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND P
+                    -RINT(.\Listings\main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /* 2014
+   2           * Breakout game by Ilya Titov. Find building instructions on http://webboggles.com/
+   3           * The code that does not fall under the licenses of sources listed below can be used non commercially wit
+             -h attribution.
+   4           *
+   5           * If you have problems uploading this sketch, this is probably due to sketch size - you need to update ld
+             -.exe in arduino\hardware\tools\avr\avr\bin
+   6           * https://github.com/TCWORLD/ATTinyCore/tree/master/PCREL%20Patch%20for%20GCC
+   7           *
+   8           * This sketch is using the screen control and font functions written by Neven Boyanov for the http://tinu
+             -saur.wordpress.com/ project
+   9           * Source code and font files available at: https://bitbucket.org/tinusaur/ssd1306xled
+  10           * 
+  11           * Sleep code is based on this blog post by Matthew Little:
+  12           * http://www.re-innovation.co.uk/web12/index.php/en/blog-75/306-sleep-modes-on-attiny85
+  13          */
+  14          
+  15          #include "font6x8.h"
+  16          
+  17          
+  18          #include "globals.h"
+  19          #include "ssd1306xled.h"
+  20          #include "math.h"
+  21          
+  22          // ----------------------------------------------------------------------------
+  23          void ssd1306_init(void);
+  24          void ssd1306_xfer_start(void);
+  25          void ssd1306_xfer_stop(void);
+  26          void ssd1306_send_byte(uint8_t b);
+  27          void ssd1306_send_command(uint8_t command);
+  28          void ssd1306_send_data_start(void);
+  29          void ssd1306_send_data_stop(void);
+  30          void ssd1306_setpos(uint8_t x, uint8_t y);
+  31          void ssd1306_fillscreen(uint8_t fill_Data);
+  32          void ssd1306_char_f6x8(uint8_t x, uint8_t y, const char ch[]);
+  33          //void ssd1306_char_f8x16(uint8_t x, uint8_t y,const char ch[]);
+  34          //void ssd1306_char_f16x16(uint8_t x, uint8_t y, uint8_t N);
+  35          void ssd1306_draw_bmp(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t bitmap[]);
+  36          void setup();
+  37          void loop();
+  38          
+  39          void resetGame();
+  40          void collision();
+  41          void drawPlatform();
+  42          
+  43          
+  44          
+  45          void sendBlock(boolean fill);
+  46          
+  47          
+  48          
+  49          
+  50          
+  51          
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 09:16:29 PAGE 2   
+
+  52          // ----------------------------------------------------------------------------
+  53          
+  54          
+  55          // Routines to set and clear bits (used in the sleep code)
+  56          
+  57          
+  58          volatile byte player = 0; //0 to 128-platformWidth  - this is the position of the bounce platform
+  59          byte platformWidth = 16; 
+  60          byte ballx = 62; // coordinate of the ball
+  61          byte bally = 50; // coordinate of the ball
+  62          int vdir = -1; // vertical direction and step  distance
+  63          int hdir = -1; // horizontal direction and step distance
+  64          long lastFrame = 0; // time since the screen was updated last
+  65          boolean row1[16]; // on-off array of blocks
+  66          boolean row2[16];
+  67          boolean row3[16];
+  68          int score = 0; // score - counts the number of blocks hit and resets the array above when devisible by 48(
+             -total blocks)
+  69          
+  70          void main()
+  71          {
+  72   1              
+  73   1              setup();
+  74   1              while(1)
+  75   1              {
+  76   2                      loop();
+  77   2              }
+  78   1      }
+  79          
+  80          void setup() {
+  81   1        ssd1306_init();
+  82   1        
+  83   1        resetGame();
+  84   1        lastFrame=millis();
+  85   1        
+  86   1      }
+  87          
+  88          void loop() { 
+  89   1        delay(40);
+  90   1      
+  91   1      //     
+  92   1      //      ssd1306_char_f6x8(16, 2, "B R E A K O U T");
+  93   1      //      ssd1306_char_f6x8(20, 4, "lonesoulsurfer");
+  94   1      //      delay(200); 
+  95   1      //        ssd1306_char_f6x8(22, 7, "Tiny Arcade"); 
+  96   1      //      beep(200,600);          beep(300,200);          beep(400,300);
+  97   1      //      delay(2000);
+  98   1              
+  99   1              while (1==1) {
+ 100   2                      int i,bl,t;
+ 101   2                      char temp[4]= {0,0,0,0};
+ 102   2                      lastFrame=millis();
+ 103   2                    // continue moving after the interrupt
+ 104   2                    if (RIGHT==0){if (player <128-platformWidth){player++;} if (player <128-platformWidth){playe
+             -r++;} if (player <128-platformWidth){player++;}}
+ 105   2                    if (LEFT==0){if (player >0){player--;} if (player >0){player--;} if (player >0){player--;}}
+ 106   2                    
+ 107   2                    // bounce off the sides of the screen
+ 108   2                    if ((bally+vdir<54&&vdir==1)||(bally-vdir>1&&vdir==-1)){bally+=vdir;}else {vdir = vdir*-1;}
+ 109   2                    if ((ballx+hdir<127&&hdir==1)||(ballx-hdir>1&&hdir==-1)){ballx+=hdir;}else {hdir = hdir*-1;}
+ 110   2                    
+ 111   2                    // frame actions
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 09:16:29 PAGE 3   
+
+ 112   2                   
+ 113   2                      if(bally>10&&bally+vdir>=54&&(ballx<player||ballx>player+platformWidth)){ // game over if 
+             -the ball misses the platform
+ 114   3                        int topScore = 0;
+ 115   3                        topScore = topScore << 8;
+ 116   3                        topScore = topScore ;
+ 117   3                        
+ 118   3                        if (score>topScore){topScore = score;  }
+ 119   3                        ssd1306_fillscreen(0x00);                
+ 120   3                        ssd1306_char_f6x8(32, 3, "Game Over");
+ 121   3                        ssd1306_char_f6x8(32, 5, "score:");
+ 122   3                        
+ 123   3                        itoa(score,temp,10);
+ 124   3                        ssd1306_char_f6x8(70, 5, temp);
+ 125   3                        ssd1306_char_f6x8(32, 6, "top score:");
+ 126   3                        itoa(topScore,temp,10);
+ 127   3                        ssd1306_char_f6x8(90, 6, temp);
+ 128   3                        for (i = 0; i<1000; i++){
+ 129   4                          beep(1,random(0,i*2));
+ 130   4                        }
+ 131   3                        delay(1000);
+ 132   3                        system_sleep();
+ 133   3                        resetGame();
+ 134   3                      }else if (ballx<player+platformWidth/2&&bally>10&&bally+vdir>=54){ // if the ball hits lef
+             -t of the platform bounce left
+ 135   3                        hdir=-1; beep(20,600);
+ 136   3                      }else if (ballx>player+platformWidth/2&&bally>10&&bally+vdir>=54){  // if the ball hits ri
+             -ght of the platform bounce right
+ 137   3                        hdir=1; beep(20,600);
+ 138   3                      }else if (bally+vdir>=54){
+ 139   3                        hdir=1; beep(20,600);
+ 140   3                      }
+ 141   2                      
+ 142   2                      collisionCheck: // go back to here if a collision was detected to prevent flying through a
+             - rigid
+ 143   2                      if (floor((bally+vdir)/8)==2){
+ 144   3                        if (row3[ballx/8]==1){row3[ballx/8]=0; score++;  
+ 145   4                            collision(); goto collisionCheck; // check collision for the new direction to preven
+             -t flying through a rigid
+ 146   4                        }
+ 147   3                      }else if (floor((bally+vdir)/8)==1){
+ 148   3                        if (row2[ballx/8]==1){row2[ballx/8]=0; score++; 
+ 149   4                            collision(); goto collisionCheck;
+ 150   4                        }
+ 151   3                      }else if (floor((bally+vdir)/8)==0){
+ 152   3                        if (row1[ballx/8]==1){row1[ballx/8]=0; score++;
+ 153   4                            collision(); goto collisionCheck;
+ 154   4                        }
+ 155   3                      }
+ 156   2                      
+ 157   2                      // reset blocks if all have been hit
+ 158   2                      if (score%48==0){ 
+ 159   3                                              byte i;
+ 160   3                        for (i =0; i<16;i++){
+ 161   4                         row1[i]=1; row2[i]=1; row3[i]=1;
+ 162   4                        } 
+ 163   3                      }
+ 164   2                    
+ 165   2                    
+ 166   2                     
+ 167   2                    // update whats on the screen
+ 168   2      
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 09:16:29 PAGE 4   
+
+ 169   2                        
+ 170   2                        // blocks
+ 171   2                        ssd1306_setpos(0,0);
+ 172   2                        ssd1306_send_data_start();
+ 173   2                        for (bl = 0; bl <16; bl++){
+ 174   3                          if(row1[bl]==1){
+ 175   4                            sendBlock(1);
+ 176   4                          }else {
+ 177   4                            sendBlock(0);
+ 178   4                          }
+ 179   3                         }   
+ 180   2                        ssd1306_send_data_stop();
+ 181   2                        ssd1306_setpos(0,1);
+ 182   2                        ssd1306_send_data_start();
+ 183   2                        for (bl = 0; bl <16; bl++){
+ 184   3                          if(row2[bl]==1){
+ 185   4                            sendBlock(1);
+ 186   4                          }else {
+ 187   4                            sendBlock(0);
+ 188   4                          }
+ 189   3                         }   
+ 190   2                        ssd1306_send_data_stop();
+ 191   2                        ssd1306_setpos(0,2);
+ 192   2                        ssd1306_send_data_start();
+ 193   2                        for (bl = 0; bl <16; bl++){
+ 194   3                          if(row3[bl]==1){
+ 195   4                            sendBlock(1);
+ 196   4                          }else {
+ 197   4                            sendBlock(0);
+ 198   4                          }
+ 199   3                         }   
+ 200   2                        ssd1306_send_data_stop();
+ 201   2                        
+ 202   2                        // clear area below the blocks
+ 203   2                        ssd1306_setpos(0,3);
+ 204   2                        ssd1306_send_data_start();
+ 205   2                        for (i =0; i<128; i++){
+ 206   3                           ssd1306_send_byte(B00000000);
+ 207   3                        }
+ 208   2                        ssd1306_send_data_stop();
+ 209   2                        ssd1306_setpos(0,4);
+ 210   2                        ssd1306_send_data_start();
+ 211   2                        for (i =0; i<128; i++){
+ 212   3                           ssd1306_send_byte(B00000000);
+ 213   3                        }
+ 214   2                        ssd1306_send_data_stop();
+ 215   2                        ssd1306_setpos(0,5);
+ 216   2                        ssd1306_send_data_start();
+ 217   2                        for (i =0; i<128; i++){
+ 218   3                           ssd1306_send_byte(B00000000);
+ 219   3                        }
+ 220   2                        ssd1306_send_data_stop();
+ 221   2                        ssd1306_setpos(0,6);
+ 222   2                        ssd1306_send_data_start();
+ 223   2                        for (i =0; i<128; i++){
+ 224   3                           ssd1306_send_byte(B00000000);
+ 225   3                        }
+ 226   2                        ssd1306_send_data_stop();
+ 227   2                        ssd1306_setpos(0,7);
+ 228   2                        ssd1306_send_data_start();
+ 229   2                        for (i =0; i<128; i++){
+ 230   3                           ssd1306_send_byte(B00000000);
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 09:16:29 PAGE 5   
+
+ 231   3                        }
+ 232   2                        ssd1306_send_data_stop();
+ 233   2                        
+ 234   2                        // draw ball
+ 235   2                        ssd1306_setpos(ballx,bally/8);
+ 236   2                        t = B00000001;
+ 237   2                        ssd1306_send_data_start();
+ 238   2                        t = t << bally%8+1;
+ 239   2                        ssd1306_send_byte(t);  
+ 240   2                        ssd1306_send_data_stop();
+ 241   2                        
+ 242   2                        drawPlatform();
+ 243   2                      while(millis()-lastFrame<30);
+ 244   2                   //     
+ 245   2                     
+ 246   2              }
+ 247   1      }
+ 248          
+ 249          
+ 250          void resetGame(){
+ 251   1              byte i;
+ 252   1              ssd1306_fillscreen(0x00);
+ 253   1        ssd1306_char_f6x8(16, 2, "B R E A K O U T");
+ 254   1        
+ 255   1        ssd1306_char_f6x8(22, 7, "Stc8 Arcade"); 
+ 256   1        waitStart();
+ 257   1       
+ 258   1      //  beep(200,600);          beep(300,200);          beep(400,300);
+ 259   1        delay(2000);
+ 260   1        for (i =0; i<16;i++){ // reset blocks
+ 261   2         row1[i]=1; row2[i]=1; row3[i]=1;
+ 262   2        } 
+ 263   1        platformWidth = 16;
+ 264   1        ballx = 64;
+ 265   1        bally = 50;
+ 266   1        hdir = -1;
+ 267   1        vdir = -1;
+ 268   1        score = 0;
+ 269   1        player = random(0,128-platformWidth);
+ 270   1        ballx = player+platformWidth/2;
+ 271   1      }
+ 272          
+ 273          void collision(){ // the collsision check is actually done befor this is called, this code works out where
+             - the ball will bounce
+ 274   1        if ((bally+vdir)%8==7&&(ballx+hdir)%8==7){ // bottom right corner
+ 275   2            if (vdir==1){hdir=1;}else if(vdir==-1&&hdir==1){vdir=1;}else {hdir=1;vdir=1;}
+ 276   2          }else if ((bally+vdir)%8==7&&(ballx+hdir)%8==0){ // bottom left corner
+ 277   2            if (vdir==1){hdir=-1;}else if(vdir==-1&&hdir==-1){vdir=1;}else {hdir=-1;vdir=1;}
+ 278   2          }else if ((bally+vdir)%8==0&&(ballx+hdir)%8==0){ // top left corner
+ 279   2            if (vdir==-1){hdir=-1;}else if(vdir==1&&hdir==-1){vdir=-1;}else {hdir=-1;vdir=-1;}
+ 280   2          }else if ((bally+vdir)%8==0&&(ballx+hdir)%8==7){ // top right corner
+ 281   2            if (vdir==-1){hdir=1;}else if(vdir==1&&hdir==1){vdir=-1;}else {hdir=1;vdir=-1;}
+ 282   2          }else if ((bally+vdir)%8==7){ // bottom side
+ 283   2            vdir = 1;
+ 284   2          }else if ((bally+vdir)%8==0){ // top side
+ 285   2            vdir = -1;
+ 286   2          }else if ((ballx+hdir)%8==7){ // right side
+ 287   2            hdir = 1;
+ 288   2          }else if ((ballx+hdir)%8==0){ // left side
+ 289   2            hdir = -1;
+ 290   2          }else {
+ 291   2            hdir = hdir*-1; vdir = vdir*-1;
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 09:16:29 PAGE 6   
+
+ 292   2        }
+ 293   1        
+ 294   1        beep(30,300);
+ 295   1        
+ 296   1      }
+ 297          void drawPlatform(){
+ 298   1              byte pw;
+ 299   1      
+ 300   1       ssd1306_setpos(player,7);
+ 301   1       ssd1306_send_data_start();
+ 302   1       for (pw = 1; pw <platformWidth; pw++){ssd1306_send_byte(B00000011);}                
+ 303   1       ssd1306_send_data_stop();  
+ 304   1      
+ 305   1      }
+ 306          void sendBlock(boolean fill){
+ 307   1        if (fill==1){
+ 308   2         ssd1306_send_byte(B00000000);
+ 309   2         ssd1306_send_byte(B01111110);
+ 310   2         ssd1306_send_byte(B01111110);
+ 311   2         ssd1306_send_byte(B01111110);
+ 312   2         ssd1306_send_byte(B01111110);
+ 313   2         ssd1306_send_byte(B01111110);
+ 314   2         ssd1306_send_byte(B01111110);
+ 315   2         ssd1306_send_byte(B00000000);
+ 316   2        }else {
+ 317   2         ssd1306_send_byte(B00000000);
+ 318   2         ssd1306_send_byte(B00000000);
+ 319   2         ssd1306_send_byte(B00000000);
+ 320   2         ssd1306_send_byte(B00000000);
+ 321   2         ssd1306_send_byte(B00000000);
+ 322   2         ssd1306_send_byte(B00000000);
+ 323   2         ssd1306_send_byte(B00000000);
+ 324   2         ssd1306_send_byte(B00000000);
+ 325   2        } 
+ 326   1      }
+ 327          
+ 328          
+ 329          
+ 330          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2781    ----
+   CONSTANT SIZE    =    444    ----
+   XDATA SIZE       =     62      13
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

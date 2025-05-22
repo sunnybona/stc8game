@@ -1,0 +1,747 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Program Files\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND P
+                    -RINT(.\Listings\main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /* 2014
+   2           * Breakout game by Ilya Titov. Find building instructions on http://webboggles.com/
+   3           * The code that does not fall under the licenses of sources listed below can be used non commercially wit
+             -h attribution.
+   4           *
+   5           * If you have problems uploading this sketch, this is probably due to sketch size - you need to update ld
+             -.exe in arduino\hardware\tools\avr\avr\bin
+   6           * https://github.com/TCWORLD/ATTinyCore/tree/master/PCREL%20Patch%20for%20GCC
+   7           *
+   8           * This sketch is using the screen control and font functions written by Neven Boyanov for the http://tinu
+             -saur.wordpress.com/ project
+   9           * Source code and font files available at: https://bitbucket.org/tinusaur/ssd1306xled
+  10           * 
+  11           * Sleep code is based on this blog post by Matthew Little:
+  12           * http://www.re-innovation.co.uk/web12/index.php/en/blog-75/306-sleep-modes-on-attiny85
+  13          */
+  14          
+  15          #include "font6x8.h"
+  16          
+  17          
+  18          #include "globals.h"
+  19          #include "ssd1306xled.h"
+  20          #include "math.h"
+  21          #define SPEED 7
+  22          // ----------------------------------------------------------------------------
+  23          
+  24          void setup();
+  25          void loop();
+  26          void resetAliens(void);
+  27          void drawPlatform(void);
+  28          void sendBlock(int);
+  29          void playSpaceAttack(void);
+  30          void beep(int,int);
+  31          void levelUp(int);
+  32          void drawFire(int x, int y);
+  33          void doDrawLS(long, byte);
+  34          void doDrawRS(long, byte);
+  35          void clearAlienArea(int row, int lastActive);
+  36          void doNumber (int x, int y, int value);
+  37          void resetGame();
+  38          void collision();
+  39          
+  40          
+  41          
+  42          
+  43          void sendBlock(int);
+  44          
+  45          
+  46          
+  47          
+  48          
+  49          
+  50          // ----------------------------------------------------------------------------
+  51          
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 2   
+
+  52          
+  53          // Routines to set and clear bits (used in the sleep code)
+  54          
+  55          
+  56          long firecounter = 0; // Timer for managing fire
+  57          long aliencounter = 0; // Timer for alien movement
+  58          int mothercounter = 0; // Timer for movement of the mothership
+  59          int level = 1; // Game level - incremented every time you clear the screen
+  60          int mothershipX = 0; // position of mothership
+  61          int mothership = 0; // is mothership active?
+  62          int mothershipWidth = 8; // mothership width in pixels
+  63          int fireXidx, fireYidx; // mapping of player fire locaiton onto array of aliens
+  64          int leftLimit; // furtherst left in x-axis pixels that the aliens are currently
+  65          int positionNow = 0; // current position of the alien array (as steps from the left)
+  66          boolean alienDirection = 1; // current direction of travel for alien swarm - 1 is right 0 is left
+  67          int alienRow = 0; // which alien row are we considering
+  68          int alienFire[5][3]; // max 5 lots of alien fire  - indices are active, xpos, ypos
+  69          int playerFire[3]; // one lot of player fire - indices are active, xpos, ypos
+  70          boolean row[4][10]; // on-off array of aliens
+  71          int firstAlien = 0; // index of first live alien in the array
+  72          int lastAlien = 8; // index of last live alien in the array
+  73          int newFirst = 0; // as above when it changes
+  74          int newLast = 8; // ...
+  75          int aliensDead = 0; // how many aliens have been killed in total on this level?
+  76          int lastActiveRow = 2; // what's the lowest row in which we will find live aliens?
+  77          int deadOn1 = 0; // how many aliens are dead on row one (middle row)
+  78          int deadOn2 = 0; // how many aliens are dead on row two (bottom row)
+  79          
+  80          boolean fire = 0;
+  81          int topScoreB = 0;
+  82          int player; //0 to 128-platformWidth  - this is the position of the player
+  83          int platformWidth = 16; 
+  84          boolean stopAnimate = 0; // this is set to 1 when a collision is detected
+  85          boolean mute = 0;
+  86          boolean newHigh = 0;
+  87          int score = 0; // score - this affects the difficulty of the game
+  88          int top = 0;
+  89          
+  90          
+  91          void main()
+  92          {
+  93   1              setup();
+  94   1              while(1)
+  95   1              {
+  96   2                      loop();
+  97   2              }
+  98   1              
+  99   1      }
+ 100          
+ 101          // Arduino stuff - setup
+ 102          void setup() {
+ 103   1        ssd1306_init();
+ 104   1      }
+ 105          
+ 106          // Arduino stuff - loop
+ 107          void loop() { 
+ 108   1         long startT = millis();
+ 109   1        long nowT =0;
+ 110   1        boolean sChange = 0;
+ 111   1              player = 96;
+ 112   1        ssd1306_fillscreen(0x00);
+ 113   1        
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 3   
+
+ 114   1        // The lower case character set is seriously compromised because I've had to truncate the ASCII table
+ 115   1        // to release space for executable code - hence lower case y and w are remapped to h and / respectively.
+ 116   1        // There is no z in the table (or h!) as these aren't used anywhere in the text here and most of the 
+ 117   1        // symbols are also missing for the same reason (see my hacked version of font6x8.h - font6x8AJ.h for mo
+             -re detail)
+ 118   1        ssd1306_char_f6x8(0, 1, "S P A C E");
+ 119   1        ssd1306_char_f6x8(4, 2, "A T T A C K");
+ 120   1        ssd1306_char_f6x8(0, 7, "Stc8 Acrade"); // see comments above !
+ 121   1      
+ 122   1        ssd1306_setpos(85,1);
+ 123   1        ssd1306_send_data_start();
+ 124   1        sendBlock(1);
+ 125   1        sendBlock(0);  
+ 126   1        sendBlock(1);
+ 127   1        ssd1306_send_data_stop();
+ 128   1        ssd1306_setpos(85,2);
+ 129   1        ssd1306_send_data_start();
+ 130   1        sendBlock(0);
+ 131   1        sendBlock(2);
+ 132   1        sendBlock(0);
+ 133   1        ssd1306_send_data_stop();
+ 134   1        ssd1306_setpos(85,3);
+ 135   1        ssd1306_send_data_start();
+ 136   1        sendBlock(0);
+ 137   1        sendBlock(0);  
+ 138   1        sendBlock(1);
+ 139   1        sendBlock(0);  
+ 140   1        sendBlock(1);
+ 141   1        ssd1306_send_data_stop();
+ 142   1        
+ 143   1        drawPlatform();
+ 144   1      
+ 145   1       
+ 146   1      //  while(ACT == HIGH) {
+ 147   1      //    nowT = millis();
+ 148   1      //    if (nowT - startT > 2000) {
+ 149   1      //      sChange = 1;     
+ 150   1      //      if (RIGHT == HIGH) {
+ 151   1      
+ 152   1      //        ssd1306_char_f6x8(8, 0, "-HIGH SCORE RESET-");  
+ 153   1      //      } else if (mute == 0) { mute = 1; ssd1306_char_f6x8(32, 0, "-- MUTE --"); } else { mute = 0; ssd13
+             -06_char_f6x8(23, 0, "-- SOUND ON --");  }    
+ 154   1      //      break;
+ 155   1      //    }
+ 156   1      //    if (sChange == 1) break;
+ 157   1      //  }  
+ 158   1        waitStart();
+ 159   1      
+ 160   1      
+ 161   1        if (sChange == 0) {
+ 162   2                byte mm;
+ 163   2                int i;
+ 164   2          for (mm = 112;mm>=1;mm--) {
+ 165   3            if ( (mm>=32) && (mm<56) ) drawFire(104,mm);
+ 166   3            if (mm == 32) {
+ 167   4              ssd1306_setpos(100,3);      
+ 168   4              ssd1306_send_data_start();
+ 169   4              sendBlock(0);
+ 170   4              ssd1306_send_data_stop();
+ 171   4              ssd1306_setpos(100,4);      
+ 172   4              ssd1306_send_data_start();
+ 173   4              sendBlock(0);
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 4   
+
+ 174   4              ssd1306_send_data_stop();
+ 175   4              beep(30,100);
+ 176   4            }
+ 177   3            ssd1306_setpos(mm,0);      
+ 178   3            ssd1306_send_data_start();
+ 179   3            sendBlock(3);
+ 180   3            sendBlock(0);
+ 181   3            ssd1306_send_data_stop();
+ 182   3            drawPlatform();
+ 183   3            delay(20);
+ 184   3          }
+ 185   2          ssd1306_setpos(0,0);      
+ 186   2          ssd1306_send_data_start();
+ 187   2          sendBlock(0);
+ 188   2          sendBlock(0);
+ 189   2          ssd1306_send_data_stop();
+ 190   2          ssd1306_char_f6x8(0, 7, "Tiny Arcade");  // see comments above !
+ 191   2          delay(1500);
+ 192   2          ssd1306_init();
+ 193   2          ssd1306_fillscreen(0x00);
+ 194   2          stopAnimate = 0;
+ 195   2          score = 0;
+ 196   2          
+ 197   2          playSpaceAttack(); 
+ 198   2          top=topScoreB;
+ 199   2          
+ 200   2          ssd1306_fillscreen(0x00);
+ 201   2          ssd1306_char_f6x8(11, 1, "----------------");
+ 202   2          ssd1306_char_f6x8(11, 2, "G A M E  O V E R");
+ 203   2          ssd1306_char_f6x8(11, 3, "----------------");
+ 204   2          ssd1306_char_f6x8(37, 5, "SCORE:");
+ 205   2          doNumber(75, 5, score);
+ 206   2          if (!newHigh) {
+ 207   3            ssd1306_char_f6x8(21, 7, "HIGH SCORE:");
+ 208   3            doNumber(88, 7, top);
+ 209   3          }
+ 210   2          for (i = 0; i<1000; i = i+ 50){
+ 211   3            beep(50,i);
+ 212   3          }
+ 213   2          delay(2000);
+ 214   2          if (newHigh) {
+ 215   3            ssd1306_fillscreen(0x00);
+ 216   3            ssd1306_char_f6x8(10, 1, "----------------");
+ 217   3            ssd1306_char_f6x8(10, 3, " NEW HIGH SCORE ");
+ 218   3            ssd1306_char_f6x8(10, 7, "----------------");
+ 219   3            doNumber(50,5,top);
+ 220   3            for (i = 700; i>200; i = i - 50){
+ 221   4            beep(30,i);
+ 222   4            }
+ 223   3            newHigh = 0;
+ 224   3            delay(2700);    
+ 225   3          } 
+ 226   2        }
+ 227   1        system_sleep();
+ 228   1      }
+ 229          
+ 230          void doNumber (int x, int y, int value) {
+ 231   1          char temp[10] = {0,0,0,0,0,0,0,0,0,0};
+ 232   1          itoa(value,temp,10);
+ 233   1          ssd1306_char_f6x8(x, y, temp);
+ 234   1      }
+ 235          
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 5   
+
+ 236          
+ 237          
+ 238          
+ 239          /* ------------------------
+ 240           *  SpaceAttack Code
+ 241           */
+ 242          void playSpaceAttack() {
+ 243   1        byte i;
+ 244   1        
+ 245   1        firecounter = 0; // Timer for managing fire
+ 246   1        level = 1; // Game level - incremented every time you clear the screen
+ 247   1        topScoreB = 0; // highscore
+ 248   1        score = 0; // obvious
+ 249   1       
+ 250   1        // Initialisations
+ 251   1        for (i = 0; i<5;i++) {
+ 252   2          alienFire[i][0] = 0;
+ 253   2        }
+ 254   1        resetAliens();
+ 255   1      
+ 256   1        levelUp(1); // This also does various essential initialisations
+ 257   1        
+ 258   1        
+ 259   1        
+ 260   1        while (stopAnimate == 0) {
+ 261   2               unsigned long lastFrame;
+ 262   2          while(1) {
+ 263   3           byte               afIndex;
+ 264   3              int inc,burnLimit,burn;
+ 265   3          aliencounter++;
+ 266   3          firecounter++;
+ 267   3          mothercounter++;
+ 268   3          lastFrame=millis();
+ 269   3          // deal with inputs
+ 270   3          if(random(0,1000) < 940) fire =1; // this reads the reset pin (pin 1) of the Attiny85 - to use it, see
+             - comments section above
+ 271   3          if (ACT==0) fire = 1;
+ 272   3              else fire=0;
+ 273   3          if(RIGHT==0) {
+ 274   4            
+ 275   4            if(player < 127-platformWidth) {
+ 276   5              player++;
+ 277   5              } 
+ 278   4          }
+ 279   3          if (LEFT==0){
+ 280   4            
+ 281   4            if (player >1){
+ 282   5              player--;
+ 283   5              } 
+ 284   4           }
+ 285   3      
+ 286   3          if ( (mothership == 0) && (random(0,1000) > 998) && (alienRow>0) ) {
+ 287   4            mothership = 1;
+ 288   4            mothershipX= 127-16;
+ 289   4          }
+ 290   3      
+ 291   3          // draw aliens
+ 292   3          for (inc = 0; inc <= lastActiveRow; inc ++) {
+ 293   4                int bl;
+ 294   4            ssd1306_setpos((positionNow*8),inc+alienRow);
+ 295   4            ssd1306_send_data_start();
+ 296   4            for (bl = firstAlien; bl <=lastAlien; bl++){
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 6   
+
+ 297   5              if(row[inc][bl]==1){
+ 298   6                if (inc == lastActiveRow) {
+ 299   7                  if(random(0,1000) > (999-level)) { // this alien is going to fire!
+ 300   8                    byte afIndex = 0;
+ 301   8                    while (alienFire[afIndex][0] == 1) {
+ 302   9                      afIndex++; // search for empty alien fire option
+ 303   9                      if (afIndex == 5) break;
+ 304   9                    } 
+ 305   8                    if (afIndex < 5) { // we've found a slot
+ 306   9                      alienFire[afIndex][0] = 1; // activate fire on this slot
+ 307   9                      alienFire[afIndex][1] = ( (positionNow*8) + ((bl-firstAlien) * 8) + 4); // x position
+ 308   9                      alienFire[afIndex][2] = (inc+alienRow+1)*8; // Where the fire starts
+ 309   9                    }
+ 310   8                  } // end of this alien firing
+ 311   7                } // only if we are on the lowest row of live aliens
+ 312   6                if ( (inc == 0) || (inc == 2) ) {
+ 313   7                  sendBlock(1);
+ 314   7                } else {
+ 315   7                  sendBlock(2);
+ 316   7                }
+ 317   6              }else {
+ 318   6                sendBlock(0);
+ 319   6              }
+ 320   5             }   
+ 321   4            ssd1306_send_data_stop();
+ 322   4          }
+ 323   3      
+ 324   3      
+ 325   3          // Display the score
+ 326   3          doNumber(0,6,score);
+ 327   3          
+ 328   3          // Burn clock cycles to keep game at constant (ish) speed when there are low numbers of live aliens 
+ 329   3          burnLimit = (8-(lastAlien-firstAlien));
+ 330   3          for (burn = 0; burn < burnLimit; burn+=2) {                  
+ 331   4              drawPlatform();    
+ 332   4              }
+ 333   3      
+ 334   3          // Display the mothership
+ 335   3          if (mothercounter >= 3) {
+ 336   4            mothercounter = 0;    
+ 337   4            // draw mothership
+ 338   4            if (mothership) {
+ 339   5              ssd1306_setpos(mothershipX,0);
+ 340   5              ssd1306_send_data_start();
+ 341   5              sendBlock(3);
+ 342   5              sendBlock(0);
+ 343   5              ssd1306_send_data_stop();
+ 344   5              mothershipX --;
+ 345   5              if (mothershipX == 0) {
+ 346   6                mothership = 0;                      
+ 347   6                ssd1306_setpos(mothershipX,0);
+ 348   6                ssd1306_send_data_start();
+ 349   6                sendBlock(0);
+ 350   6                sendBlock(0);
+ 351   6                ssd1306_send_data_stop();
+ 352   6              }
+ 353   5            }
+ 354   4          }
+ 355   3      
+ 356   3          // Move the aliens
+ 357   3          if (aliencounter >= (92-((level-1)*5)) ) {
+ 358   4              aliencounter = 0;
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 7   
+
+ 359   4            if(alienDirection) { // Moving right
+ 360   5              // move down a row
+ 361   5              if (positionNow >= 6+(8-(lastAlien-firstAlien))) {
+ 362   6                alienDirection = 0;
+ 363   6                clearAlienArea(alienRow,lastActiveRow);                                   
+ 364   6                alienRow++;
+ 365   6              } else {
+ 366   6                positionNow++;
+ 367   6              }
+ 368   5            } else { // Moving left
+ 369   5              // move down a row
+ 370   5              if (positionNow <= 0) {
+ 371   6                alienDirection = 1;
+ 372   6                clearAlienArea(alienRow,lastActiveRow);                                   
+ 373   6                alienRow++;
+ 374   6              } else {
+ 375   6                positionNow --;
+ 376   6              }
+ 377   5            } 
+ 378   4            clearAlienArea(alienRow,lastActiveRow);                                   
+ 379   4          }
+ 380   3      
+ 381   3          // Fire !
+ 382   3          if ((fire == 1) && (playerFire[0] == 0)) { // fire has been pressed and we're not currently firing - i
+             -nitiate fire!!
+ 383   4            playerFire[0] = 1;
+ 384   4            playerFire[1] = player+platformWidth/2; // xposition of new fire!
+ 385   4            playerFire[2] = 56;
+ 386   4          }
+ 387   3      
+ 388   3          // Handle all firing-related stuff (in both directions!)
+ 389   3          if (firecounter >= 2) {                  
+ 390   4            firecounter = 0;
+ 391   4            // --- Deal with player Firing --- 
+ 392   4            if (playerFire[0] == 1) {                      
+ 393   5                drawFire(playerFire[1], playerFire[2]);
+ 394   5                if (playerFire[2] == 0) {
+ 395   6                  ssd1306_setpos(playerFire[1],0);
+ 396   6                  
+ 397   6                  ssd1306_send_data_start();
+ 398   6                  ssd1306_send_byte(B00000000);  
+ 399   6                  ssd1306_send_data_stop();                                                          
+ 400   6                  playerFire[0] = 0;
+ 401   6                  fire = 0;
+ 402   6                } else {
+ 403   6                  playerFire[2] = playerFire[2] - 1;                          
+ 404   6                }
+ 405   5            }
+ 406   4            
+ 407   4            // aliens are at positionNow * 8 + 8* their index
+ 408   4            
+ 409   4            leftLimit = positionNow*8;
+ 410   4            if ((fire == 1)) {
+ 411   5              fireXidx = firstAlien + floor((playerFire[1]-positionNow*8)/8);                    
+ 412   5              fireYidx=  floor(floor(playerFire[2]/8) - alienRow);
+ 413   5              
+ 414   5              if((mothership == 1) && (playerFire[1] >= mothershipX) && (playerFire[1] <= mothershipX +8) && pla
+             -yerFire[2] <=8) {
+ 415   6                long scm = random(1,100);
+ 416   6                if (scm<30) {
+ 417   7                  score +=50;
+ 418   7                } else if (scm<60) {
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 8   
+
+ 419   7                  score += 100;
+ 420   7                } else if (scm<90) {
+ 421   7                  score += 150;
+ 422   7                } else {
+ 423   7                  score += 300;
+ 424   7                }
+ 425   6                  
+ 426   6                beep(30,400);
+ 427   6                beep(30,300);          
+ 428   6                beep(30,200);
+ 429   6                beep(30,100);
+ 430   6                mothership = 0;
+ 431   6                ssd1306_setpos(mothershipX,0);
+ 432   6                ssd1306_send_data_start();
+ 433   6                sendBlock(0);
+ 434   6                sendBlock(0);
+ 435   6                ssd1306_send_data_stop();
+ 436   6              }
+ 437   5      
+ 438   5              // Alien has been hit
+ 439   5              if ((playerFire[1] >= leftLimit) && (fireYidx>=0) && (fireYidx<=lastActiveRow) && (fireXidx>=0) &&
+             - (fireXidx<9)) {                    
+ 440   6                if (row[fireYidx][fireXidx] == 1) { 
+ 441   7                   int xi;
+ 442   7                  int lastActiveToClear = lastActiveRow; // if we kill the last alien on a row - we still need t
+             -o clear that row (end of this fn)
+ 443   7                  
+ 444   7                  if (fireYidx == 2) deadOn2++;
+ 445   7                  if (fireYidx == 1) deadOn1++;
+ 446   7                  
+ 447   7                  if (deadOn2 == 5) {lastActiveRow = 1;}
+ 448   7                  if ((deadOn1 == 4) && (deadOn2 == 5)) {lastActiveRow = 0;}
+ 449   7      
+ 450   7                  score = score + (int)((3-fireYidx) * 10);
+ 451   7                              
+ 452   7                  aliensDead++;                      
+ 453   7                  ssd1306_setpos(playerFire[1],alienRow+fireYidx+1);
+ 454   7                  
+ 455   7                  ssd1306_send_data_start();
+ 456   7                  ssd1306_send_byte(B00000000);  
+ 457   7                  ssd1306_send_data_stop();                                                          
+ 458   7                  beep(30,100);
+ 459   7                  
+ 460   7                  fire = 0;
+ 461   7                  playerFire[0] = 0;
+ 462   7                  playerFire[1] = 0;
+ 463   7                  playerFire[2] = 7;
+ 464   7                  row[fireYidx][fireXidx] = 0;
+ 465   7                  
+ 466   7                  if (fireXidx == firstAlien) { // this is the first Alien - sweep back and reset to new first a
+             -lien
+ 467   8                    for (xi = lastAlien; xi>=firstAlien;xi--) {
+ 468   9                      if ( (row[0][xi] == 1) || (row[1][xi] == 1) || (row[2][xi] == 1) ) newFirst = xi;
+ 469   9                    }
+ 470   8                    positionNow += newFirst - firstAlien;
+ 471   8                    firstAlien = newFirst;
+ 472   8                  }
+ 473   7                  
+ 474   7                  if (fireXidx == lastAlien) { // this is the last Alien - sweep thru and reset to new last alie
+             -n
+ 475   8                                      
+ 476   8                    for (xi = firstAlien; xi<=lastAlien;xi++) {
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 9   
+
+ 477   9                      if ( (row[0][xi] == 1) || (row[1][xi] == 1) || (row[2][xi] == 1) ) newLast = xi;
+ 478   9                    }
+ 479   8                    lastAlien = newLast;
+ 480   8                  }
+ 481   7                  clearAlienArea(alienRow,lastActiveToClear);
+ 482   7                                                     
+ 483   7                }         
+ 484   6              }
+ 485   5            }
+ 486   4      
+ 487   4      
+ 488   4            // --- Deal with Alien Firing --- 
+ 489   4            for (afIndex = 0; afIndex<5; afIndex++) {
+ 490   5              if(alienFire[afIndex][0] == 1) {
+ 491   6                drawFire(alienFire[afIndex][1],alienFire[afIndex][2]);
+ 492   6                alienFire[afIndex][2] = alienFire[afIndex][2] + 1;
+ 493   6      
+ 494   6                if (alienFire[afIndex][2] >= 56) {
+ 495   7                                
+ 496   7                  ssd1306_setpos(alienFire[afIndex][1],7);
+ 497   7                  
+ 498   7                  ssd1306_send_data_start();
+ 499   7                  ssd1306_send_byte( B00000000);  
+ 500   7                  ssd1306_send_data_stop();                                                          
+ 501   7                  alienFire[afIndex][0] = 0; // the fire's got to the end
+ 502   7                  if( ((alienFire[afIndex][1]) > player) && ( (alienFire[afIndex][1]) < player+platformWidth) ) 
+             -{ // you've been hit!!
+ 503   8                    stopAnimate = 1;
+ 504   8                    goto die;
+ 505   8                    }
+ 506   7                }
+ 507   6              }                  
+ 508   5            } // end of aliens firing                  
+ 509   4          }
+ 510   3      
+ 511   3          if (aliensDead == 14) {
+ 512   4                      int ai;
+ 513   4            for (ai = 0; ai <= 5; ai++) alienFire[ai][0] = 0;
+ 514   4      
+ 515   4            level++;
+ 516   4            if (level>15) level = 15;
+ 517   4            levelUp(level);
+ 518   4      
+ 519   4            resetAliens();
+ 520   4          }
+ 521   3          
+ 522   3          if( ((alienRow == 5) && (lastActiveRow == 2))||  ( (alienRow == 6) && (lastActiveRow == 1)) || ((alien
+             -Row == 7) && (lastActiveRow == 0)) || stopAnimate) {
+ 523   4            stopAnimate = 1;
+ 524   4            break;
+ 525   4          }
+ 526   3          // draw the player
+ 527   3          drawPlatform();
+ 528   3              while(millis()-lastFrame<SPEED);
+ 529   3          }
+ 530   2       }
+ 531   1      die:
+ 532   1        topScoreB = 0;
+ 533   1        topScoreB = topScoreB << 8;
+ 534   1        topScoreB = topScoreB;
+ 535   1      
+ 536   1        if (score > topScoreB) { 
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 10  
+
+ 537   2          topScoreB = score;
+ 538   2          
+ 539   2          newHigh = 1;
+ 540   2          }
+ 541   1        }
+ 542          
+ 543          void drawPlatform(){
+ 544   1              byte pw ;
+ 545   1       ssd1306_setpos(player,7);
+ 546   1       ssd1306_send_data_start();
+ 547   1       ssd1306_send_byte(B00000000);   
+ 548   1       ssd1306_send_byte(B00000000);   
+ 549   1       for (pw = 0; pw <5; pw++){ssd1306_send_byte(B11000000);}                
+ 550   1       for (pw = 0; pw <4; pw++){ssd1306_send_byte(B11110000);}                
+ 551   1       for (pw = 0; pw <5; pw++){ssd1306_send_byte(B11000000);}                
+ 552   1       ssd1306_send_byte(B00000000);   
+ 553   1       ssd1306_send_byte(B00000000);   
+ 554   1       ssd1306_send_data_stop();  
+ 555   1      }
+ 556          
+ 557          void sendBlock(int fill){
+ 558   1        if (fill == 1) {
+ 559   2         ssd1306_send_byte(B10011000);
+ 560   2         ssd1306_send_byte(B01011100);
+ 561   2         ssd1306_send_byte(B10110110);
+ 562   2         ssd1306_send_byte(B01011111);
+ 563   2         ssd1306_send_byte(B01011111);
+ 564   2         ssd1306_send_byte(B10110110);
+ 565   2         ssd1306_send_byte(B01011100);
+ 566   2         ssd1306_send_byte(B10011000);
+ 567   2        } else if (fill == 2) {
+ 568   2         ssd1306_send_byte(B00110000);
+ 569   2         ssd1306_send_byte(B00111110);
+ 570   2         ssd1306_send_byte(B10110011);
+ 571   2         ssd1306_send_byte(B01011101);
+ 572   2         ssd1306_send_byte(B01011101);
+ 573   2         ssd1306_send_byte(B10110011);
+ 574   2         ssd1306_send_byte(B00111110);
+ 575   2         ssd1306_send_byte(B00110000);  
+ 576   2        } else if (fill == 3) {
+ 577   2         ssd1306_send_byte(B00011000);
+ 578   2         ssd1306_send_byte(B00111000);
+ 579   2         ssd1306_send_byte(B00110100);
+ 580   2         ssd1306_send_byte(B00110100);
+ 581   2         ssd1306_send_byte(B00110100);
+ 582   2         ssd1306_send_byte(B00110100);
+ 583   2         ssd1306_send_byte(B00111000);
+ 584   2         ssd1306_send_byte(B00011000);  
+ 585   2        } else if (fill == 0) {
+ 586   2         ssd1306_send_byte(B00000000);
+ 587   2         ssd1306_send_byte(B00000000);
+ 588   2         ssd1306_send_byte(B00000000);
+ 589   2         ssd1306_send_byte(B00000000);
+ 590   2         ssd1306_send_byte(B00000000);
+ 591   2         ssd1306_send_byte(B00000000);
+ 592   2         ssd1306_send_byte(B00000000);
+ 593   2         ssd1306_send_byte(B00000000);
+ 594   2        } 
+ 595   1      }
+ 596          
+ 597          void levelUp(int number) {
+ 598   1        int i;
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 11  
+
+ 599   1        fire = 0; // make sure no fire
+ 600   1        playerFire[0] = 0; // player fire inactive
+ 601   1        aliencounter=0;
+ 602   1        firecounter=0;
+ 603   1        mothercounter=0;
+ 604   1        firstAlien = 0;
+ 605   1        lastAlien = 8;
+ 606   1        newFirst = 0;
+ 607   1        newLast = 8;
+ 608   1        lastActiveRow = 2;
+ 609   1        deadOn1 = 0;
+ 610   1        deadOn2 = 0;
+ 611   1        aliensDead = 0;      
+ 612   1        mothership = 0;
+ 613   1        alienRow = 0;
+ 614   1        positionNow = 0;
+ 615   1        alienDirection = 1;
+ 616   1        player = 64;
+ 617   1      
+ 618   1        ssd1306_fillscreen(0x00);
+ 619   1        ssd1306_char_f6x8(16, 3, "--------------");
+ 620   1        ssd1306_char_f6x8(16, 4, " L E V E L ");
+ 621   1        ssd1306_char_f6x8(16, 5, "--------------");
+ 622   1        doNumber(85,4,number);
+ 623   1        for (i = 800; i>200; i = i - 200){
+ 624   2        beep(30,i);
+ 625   2        }
+ 626   1        delay(700);    
+ 627   1        ssd1306_fillscreen(0x00);
+ 628   1      }
+ 629          
+ 630          void drawFire(int x, int y) {
+ 631   1        if (y%8!=0){
+ 632   2          ssd1306_setpos(x,y/8);
+ 633   2          ssd1306_send_data_start();
+ 634   2          doDrawLS(0,y%8);
+ 635   2          ssd1306_send_data_stop();
+ 636   2          
+ 637   2          ssd1306_setpos(x,y/8+1);
+ 638   2          ssd1306_send_data_start();
+ 639   2          doDrawRS(0,8-y%8);
+ 640   2          ssd1306_send_data_stop();
+ 641   2        } else {
+ 642   2          ssd1306_setpos(x,y/8);
+ 643   2          ssd1306_send_data_start();
+ 644   2          doDrawLS(0,0);
+ 645   2          ssd1306_send_data_stop();
+ 646   2        }
+ 647   1      }
+ 648          
+ 649          // Drawing routine for the player and fire - with right-shifts
+ 650          void doDrawRS(long P1, byte P2) {
+ 651   1        ssd1306_send_byte((B01111110 | P1)>>P2);
+ 652   1      }
+ 653          
+ 654          // Drawing routine for the player and fire - with left-shifts
+ 655          void doDrawLS(long P1, byte P2) {
+ 656   1        ssd1306_send_byte((B01111110 | P1)<<P2);
+ 657   1      }
+ 658          
+ 659          void clearAlienArea(int row, int lastActive) {
+ 660   1        // clear alien area
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 11:43:07 PAGE 12  
+
+ 661   1              int bl,inc;
+ 662   1        for (inc = row; inc <=row+lastActive; inc ++) {
+ 663   2          ssd1306_setpos(0,inc);
+ 664   2          ssd1306_send_data_start();
+ 665   2          for (bl = 0; bl <16; bl++){
+ 666   3            sendBlock(0);
+ 667   3            }   
+ 668   2            ssd1306_send_data_stop();
+ 669   2          }
+ 670   1      }
+ 671          
+ 672          void resetAliens(void) {
+ 673   1              byte i;
+ 674   1        for (i =0; i<10;i++){ // reset aliens
+ 675   2          row[0][i]=0; row[1][i]=0; row[2][i]=0;
+ 676   2        } 
+ 677   1        for (i =0; i<9;i+=2){ // reset aliens
+ 678   2          row[0][i]=1; row[2][i]=1;
+ 679   2        } 
+ 680   1        for (i =1; i<9;i+=2){ // reset aliens
+ 681   2          row[1][i]=1;
+ 682   2        }     
+ 683   1      }
+ 684          
+ 685          
+ 686          
+ 687          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5160    ----
+   CONSTANT SIZE    =    537    ----
+   XDATA SIZE       =    135      72
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

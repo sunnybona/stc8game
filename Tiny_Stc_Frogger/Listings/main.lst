@@ -1,0 +1,859 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Program Files\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND P
+                    -RINT(.\Listings\main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /* 2014
+   2           * Breakout game by Ilya Titov. Find building instructions on http://webboggles.com/
+   3           * The code that does not fall under the licenses of sources listed below can be used non commercially wit
+             -h attribution.
+   4           *
+   5           * If you have problems uploading this sketch, this is probably due to sketch size - you need to update ld
+             -.exe in arduino\hardware\tools\avr\avr\bin
+   6           * https://github.com/TCWORLD/ATTinyCore/tree/master/PCREL%20Patch%20for%20GCC
+   7           *
+   8           * This sketch is using the screen control and font functions written by Neven Boyanov for the http://tinu
+             -saur.wordpress.com/ project
+   9           * Source code and font files available at: https://bitbucket.org/tinusaur/ssd1306xled
+  10           * 
+  11           * Sleep code is based on this blog post by Matthew Little:
+  12           * http://www.re-innovation.co.uk/web12/index.php/en/blog-75/306-sleep-modes-on-attiny85
+  13          */
+  14          
+  15          #include "font6x8.h"
+  16          
+  17          
+  18          #include "globals.h"
+  19          #include "ssd1306xled.h"
+  20          #include "math.h"
+  21          
+  22          
+  23          #define SPEED 7
+  24          // Make click delay an even number - it gets halved and then used in an integer comparison
+  25          #define CLICKDELAY 120 
+  26          
+  27          // The basline speed - higher number is slower
+  28          #define MOVEBASE 2000 
+  29          // ----------------------------------------------------------------------------
+  30          
+  31          void setup();
+  32          void loop();
+  33          void sendBlock(byte, bool);
+  34          void sendByte(byte, bool);
+  35          
+  36          // Other generic functions for games (both originated in code from webboggles.com and the sleep code is by
+             - Matthew Little - see above)
+  37          
+  38          void doNumber (int,int,int);
+  39          
+  40          // Game functions
+  41          void playFrogger(void);
+  42          void levelUp(int);
+  43          void moveBlocks(void);
+  44          void initScreen(void);
+  45          void drawDocks(void);
+  46          void drawLives(void);
+  47          void displayTitle(void);
+  48          void resetDock(byte);
+  49          void checkCollision(void);
+  50          void drawFrog(byte mode, bool frogDead) ;
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 2   
+
+  51          void drawGameScreen(byte mode) ;
+  52          
+  53          int watchDog;             // Counts drawing cycles so I can shut the game down if there's inactivity - bat
+             -tery saver!
+  54          boolean stopAnimate;      // this is set to 1 when a collision is detected
+  55          int lives;                // Lives in the game - this can go negative to end the game, which is why it's a
+             - signed variable  
+  56          bool frogDocks[5];        // Tracks which frog docks are full (at the top of the screen)
+  57          bool flipFlop;            // Used in routines that flip-flop between two states (left and right)
+  58          bool flipFlopShift;       // Same as previous one
+  59          byte frogColumn;          // Column location of frog (there are 16 altogether)
+  60          byte frogRow;             // Row locaiton of frog (there are 8, but 0 is the frog docks at the top and 7 i
+             -s the start row)
+  61          byte frogLeftLimit;       // Left limit of frog travel on start row (changes as digits in score increases)
+  62          byte frogRightLimit;      // Right limit of frog travel on start row (changes as lives decrease as there's
+             - then more space)
+  63          byte level;               // Level - starts at 1
+  64          byte blockShiftL;         // Number of pixels to shift the left-going rows by
+  65          byte blockShiftR;         // Number of pixels to shift the right-going rows by
+  66          int interimStep;          // Used as timer for incremental movements
+  67          int moveDelay;            // How long to wait until the next movement of logs etc - changes as levels incr
+             -ease to make the game go faster
+  68          int dockedFrogs;          // How many frogs are in the docks at the top
+  69          unsigned long clickBase;  // Timer for debounce
+  70          boolean clickLock;        // For debounce routine
+  71          int score;                // Obvious I hope
+  72          int topScore;             // High score
+  73          boolean newHigh;          // Is there a new high score?
+  74          boolean mute = 0;         // Mute the speaker
+  75          byte grid[6][16];         // Grid for items like logs, crocs, cars and lorries
+  76          byte frogMode;            // Represents the frog direction 
+  77          bool moveForward=0;       // Captures when the 'forward' button is pressed
+  78          bool moveLeft=0;          // Captures when the 'left' button is pressed
+  79          bool moveRight=0;         // Captures when the 'right' button is pressed
+  80          
+  81          // Bitmaps created by @senkunmusahi using https://www.riyas.org/2013/12/online-led-matrix-font-generator-w
+             -ith.html
+  82          static const byte code bitmaps[15][8]  = {
+  83          // Frogs
+  84            {0x83, 0xDC, 0x7A, 0x3F, 0x3F, 0x7A, 0xDC, 0x83},
+  85            {0x99, 0xBD, 0xDB, 0x7E, 0x7E, 0x3C, 0xE7, 0x81},
+  86            {0x81, 0xE7, 0x3C, 0x7E, 0x7E, 0xDB, 0xBD, 0x99},
+  87          
+  88          #ifdef SMALLLOGS
+              // Small logs
+                {0x1C, 0x22, 0x41, 0x55, 0x55, 0x51, 0x43, 0x61},
+                {0x69, 0x6B, 0x43, 0x61, 0x45, 0x45, 0x61, 0x65},
+                {0x45, 0x55, 0x41, 0x5D, 0x63, 0x5D, 0x22, 0x1C},
+              #else
+  94          // Bigger logs
+  95            {0x3C, 0x7E, 0xD7, 0xB5, 0xAD, 0xBF, 0xFF, 0xED}, 
+  96            {0xAD, 0xAD, 0xFF, 0xB7, 0xF5, 0xBF, 0xB7, 0xAD}, 
+  97            {0xED, 0xBD, 0xC3, 0xBD, 0xA5, 0xBD, 0x42, 0x3C},  
+  98          #endif
+  99          
+ 100          // Trucks
+ 101            {0x00, 0x7F, 0x41, 0x55, 0x55, 0x55, 0x55, 0x55},
+ 102            {0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55}, 
+ 103            {0x41, 0x7F, 0x22, 0x7F, 0x7F, 0x63, 0x22, 0x1C},
+ 104          
+ 105          // Crocs
+ 106            {0x41, 0x63, 0x46, 0x6E, 0x7C, 0x7E, 0x7A, 0x3E},
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 3   
+
+ 107            {0xBC, 0xFE, 0x7E, 0x3E, 0xBE, 0xBE, 0xFC, 0x7C},  
+ 108            {0x78, 0x38, 0x38, 0x38, 0x70, 0x60, 0x60, 0x40},
+ 109          
+ 110          // Cars
+ 111            {0x00, 0x1C, 0x22, 0x63, 0x7F, 0x7F, 0x22, 0x22},
+ 112            {0x22, 0x3E, 0x3E, 0x7F, 0x63, 0x63, 0x22, 0x1C},
+ 113            {0x22, 0x3E, 0x3E, 0x7F, 0x63, 0x63, 0x22, 0x1C}
+ 114            };
+ 115          
+ 116          // Opening artwork created by @senkunmusahi using https://www.riyas.org/2013/12/online-led-matrix-font-gen
+             -erator-with.html
+ 117          static const byte code titleBmp[]  = {
+ 118          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xC0, 0xF0, 0x7C, 0x06, 0x73, 0x59, 0x43,
+ 119          0x06, 0x3C, 0x38, 0x30, 0x30, 0x38, 0x3E, 0x26, 0x7B, 0x59, 0x43, 0x06, 0x7C, 0xF0, 0xC0, 0x80,
+ 120          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x78, 0xFF,
+ 121          0xCF, 0x01, 0x00, 0x00, 0x30, 0x60, 0xE0, 0xC0, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0xC0,
+ 122          0xC0, 0x60, 0x30, 0x00, 0x00, 0x00, 0x01, 0xCF, 0xFE, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 123          0x7C, 0xFE, 0x86, 0x0E, 0x0E, 0x1C, 0x18, 0x31, 0x7F, 0xFE, 0xFC, 0x1C, 0x18, 0x38, 0x38, 0x38,
+ 124          0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x38, 0x38, 0x38, 0x38, 0x18, 0x1C, 0xFC, 0xFE, 0x7F,
+ 125          0x39, 0x18, 0x1C, 0x0E, 0x0E, 0xC6, 0xFE, 0x3C, 0x00, 0x01, 0x07, 0x0E, 0x1C, 0x38, 0x70, 0xC0,
+ 126          0xC0, 0x80, 0x03, 0x07, 0xFC, 0xF8, 0x00, 0x00, 0xF0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xE0, 0xF0,
+ 127          0x00, 0x00, 0xF8, 0xFC, 0x0F, 0x03, 0x80, 0xC0, 0xE0, 0x70, 0x38, 0x1C, 0x0E, 0x03, 0x01, 0x00,
+ 128          0x04, 0x06, 0x0F, 0x0F, 0x06, 0x06, 0x03, 0x03, 0x03, 0x63, 0x73, 0x33, 0x3B, 0xFF, 0xFF, 0x7F,
+ 129          0x3F, 0x38, 0xF0, 0xC0, 0x00, 0xF0, 0xF8, 0x3F, 0x7F, 0xFF, 0xFF, 0x3B, 0x33, 0x63, 0x63, 0x03,
+ 130          0x03, 0x03, 0x06, 0x06, 0x0F, 0x0F, 0x06, 0x00, 
+ 131          };
+ 132          
+ 133          
+ 134          
+ 135          
+ 136          
+ 137          
+ 138          
+ 139          // ----------------------------------------------------------------------------
+ 140          
+ 141          
+ 142          // Routines to set and clear bits (used in the sleep code)
+ 143          
+ 144          
+ 145          
+ 146          void displayTitle(void) {
+ 147   1              int lxn,lxn2;
+ 148   1        int incr = 0;
+ 149   1        for(lxn = 2; lxn < 7; lxn++) {
+ 150   2          ssd1306_setpos(85,lxn); 
+ 151   2          ssd1306_send_data_start();
+ 152   2          for(lxn2 = 0; lxn2 < 40; lxn2++) {
+ 153   3            ssd1306_send_byte(pgm_read_byte(&titleBmp[incr]));      
+ 154   3            incr++;
+ 155   3          }
+ 156   2          ssd1306_send_data_stop();                    
+ 157   2        }
+ 158   1      }
+ 159          
+ 160          void main()
+ 161          {
+ 162   1              setup();
+ 163   1              while(1)
+ 164   1              {
+ 165   2                      loop();
+ 166   2              }
+ 167   1              
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 4   
+
+ 168   1      }
+ 169          
+ 170          // Arduino stuff - setup
+ 171          void setup() {
+ 172   1        ssd1306_init();
+ 173   1      }
+ 174          
+ 175          // Arduino stuff - loop
+ 176          void loop() { 
+ 177   1        int incr;
+ 178   1              long startT,nowT;
+ 179   1              boolean sChange;
+ 180   1        ssd1306_fillscreen(0x00);
+ 181   1      
+ 182   1        // The lower case character set is seriously compromised because I've had to truncate the ASCII table
+ 183   1        // to release space for executable code.
+ 184   1        // There is no z in the table as this isn't used anywhere in the text here and most of the 
+ 185   1        // symbols are also missing for the same reason (see my hacked version of font6x8.h - font6x8AJ.h for mo
+             -re detail)
+ 186   1        ssd1306_char_f6x8(0, 2, "F R O G G E R");
+ 187   1        ssd1306_char_f6x8(0, 4, "lonesoulsurfer"); // see comments above !
+ 188   1      
+ 189   1        ssd1306_setpos(0,1); 
+ 190   1        for (incr = 0; incr < 80; incr++) {
+ 191   2          ssd1306_send_data_start();
+ 192   2          ssd1306_send_byte(B00111000);
+ 193   2          ssd1306_send_data_stop();                    
+ 194   2        }
+ 195   1        ssd1306_setpos(0,3); 
+ 196   1        for (incr = 0; incr < 80; incr++) {
+ 197   2          ssd1306_send_data_start();
+ 198   2          ssd1306_send_byte(B00011100);
+ 199   2          ssd1306_send_data_stop();                    
+ 200   2        }
+ 201   1      
+ 202   1        displayTitle();
+ 203   1      
+ 204   1        ssd1306_char_f6x8(0, 6, "tiny arcade");
+ 205   1        delay(1500);
+ 206   1      
+ 207   1        startT = millis();
+ 208   1        nowT =0;
+ 209   1        sChange = 0;
+ 210   1      
+ 211   1        while(ACT == 1) {
+ 212   2          nowT = millis();
+ 213   2          if (nowT - startT > 2000) {
+ 214   3            sChange = 1;     
+ 215   3            if (RIGHT == 0) {
+ 216   4        
+ 217   4              ssd1306_char_f6x8(8, 0, "-HIGH SCORE RESET-");  
+ 218   4            } else if (mute == 0) { mute = 1; ssd1306_char_f6x8(32, 0, "-- MUTE --"); } else { mute = 0; ssd1306
+             -_char_f6x8(31, 0, "- SOUND ON -");  }    
+ 219   3            break;
+ 220   3          }
+ 221   2          if (sChange == 1) break;
+ 222   2        }  
+ 223   1        waitStart();
+ 224   1      
+ 225   1        if (sChange == 0) {
+ 226   2          delay(2000);
+ 227   2      
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 5   
+
+ 228   2          ssd1306_init();
+ 229   2          ssd1306_fillscreen(0x00);
+ 230   2      
+ 231   2          playFrogger(); 
+ 232   2      
+ 233   2          topScore = 0;
+ 234   2          topScore = topScore << 8;
+ 235   2          topScore = topScore;
+ 236   2      
+ 237   2          newHigh = 0;
+ 238   2          if (score > topScore) { 
+ 239   3            topScore = score;
+ 240   3           
+ 241   3            newHigh = 1;
+ 242   3            }
+ 243   2      
+ 244   2          ssd1306_fillscreen(0x00);
+ 245   2          ssd1306_char_f6x8(11, 1, "----------------");
+ 246   2          ssd1306_char_f6x8(11, 2, "G A M E  O V E R");
+ 247   2          ssd1306_char_f6x8(11, 3, "----------------");
+ 248   2          ssd1306_char_f6x8(37, 5, "SCORE:");
+ 249   2          doNumber(75, 5, score);
+ 250   2          if (!newHigh) {
+ 251   3            ssd1306_char_f6x8(21, 7, "HIGH SCORE:");
+ 252   3            doNumber(88, 7, topScore);
+ 253   3          }
+ 254   2          delay(1000);
+ 255   2          if (newHigh) {
+ 256   3                      int i;
+ 257   3            ssd1306_fillscreen(0x00);
+ 258   3            ssd1306_char_f6x8(10, 1, "----------------");
+ 259   3            ssd1306_char_f6x8(10, 3, " NEW HIGH SCORE ");
+ 260   3            ssd1306_char_f6x8(10, 7, "----------------");
+ 261   3            doNumber(50,5,topScore);
+ 262   3            for (i = 700; i>200; i = i - 50){
+ 263   4            beep(30,i);
+ 264   4            }
+ 265   3            delay(1200);    
+ 266   3          } 
+ 267   2        }
+ 268   1        system_sleep();
+ 269   1      }
+ 270          
+ 271          void doNumber (int x, int y, int value) {
+ 272   1          char temp[10] = {0,0,0,0,0,0,0,0,0,0};
+ 273   1          itoa(value,temp,10);
+ 274   1          ssd1306_char_f6x8(x, y, temp);
+ 275   1      }
+ 276          
+ 277          
+ 278          
+ 279          void playFrogger(){
+ 280   1              unsigned long lastFrame;
+ 281   1        stopAnimate = 0;
+ 282   1        score = 0;
+ 283   1        moveDelay = MOVEBASE;
+ 284   1        level = 1;
+ 285   1        frogColumn = 8;
+ 286   1        frogRow = 7;
+ 287   1        clickLock = 0;
+ 288   1        frogMode = 1;
+ 289   1        interimStep =0;
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 6   
+
+ 290   1        blockShiftL = 0;
+ 291   1        blockShiftR = 0;
+ 292   1        flipFlop = 1;
+ 293   1        flipFlopShift = 1;
+ 294   1        dockedFrogs = 0;
+ 295   1        lives = 2;
+ 296   1        frogRightLimit = 12;
+ 297   1        watchDog = 1; // we use this to see if there's been movement - it's only ever zero when the frog has jus
+             -t moved!
+ 298   1      
+ 299   1        initScreen();
+ 300   1        resetDock(0);
+ 301   1      
+ 302   1        drawFrog(frogMode,0);
+ 303   1        drawGameScreen(frogMode);
+ 304   1        drawLives();
+ 305   1        drawDocks();
+ 306   1        
+ 307   1        doNumber(0,7,score);
+ 308   1        
+ 309   1        
+ 310   1        while (lives >= 0) {
+ 311   2                
+ 312   2          interimStep++;
+ 313   2      
+ 314   2          if (watchDog >= 500) lives = -1; // Stop the game if nothing's happening - maybe triggered in someone'
+             -s pocket so this is to save battery!
+ 315   2          
+ 316   2          // Calculate left limit of frog movement so it doesn't hit the score
+ 317   2          frogLeftLimit = 1;
+ 318   2          if ((score / 10) % 10 != 0) frogLeftLimit++; 
+ 319   2          if ((score / 100) % 10 != 0) frogLeftLimit++;
+ 320   2          if ((score / 1000) % 10 != 0) frogLeftLimit++;
+ 321   2      
+ 322   2          // Move stuff along if it's time to
+ 323   2          if (interimStep > moveDelay/8) {
+ 324   3            watchDog++;
+ 325   3            blockShiftL++;
+ 326   3            if (flipFlopShift == 1) flipFlopShift = 0; else flipFlopShift = 1;
+ 327   3            if (flipFlopShift == 1) blockShiftR++;
+ 328   3            if (blockShiftL == 7) {
+ 329   4              moveBlocks();
+ 330   4              blockShiftL = 0;
+ 331   4            }
+ 332   3            if (blockShiftR == 7) {
+ 333   4              blockShiftR = 0;
+ 334   4            }
+ 335   3            interimStep = 0;
+ 336   3            checkCollision();
+ 337   3            if (stopAnimate == 0) {
+ 338   4              drawGameScreen(frogMode);
+ 339   4              drawFrog(frogMode,0);
+ 340   4            }
+ 341   3          }
+ 342   2      
+ 343   2          // Handle input from 'jump' button (the other two buttons are captured in the interrupt routines)
+ 344   2          if (random(0,1000) < 940 && clickLock == 0) {
+ 345   3            moveForward = 1;
+ 346   3            watchDog = 0;   // reset the watchdog so the game doesn't end!
+ 347   3            clickLock = 1;
+ 348   3            clickBase = millis();
+ 349   3          }
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 7   
+
+ 350   2      
+ 351   2          // Handle moving left
+ 352   2          if(moveLeft == 1 && millis() > clickBase + CLICKDELAY/2) {
+ 353   3            watchDog = 0;   // reset the watchdog so the game doesn't end!
+ 354   3            moveLeft = 0;
+ 355   3            if (LEFT == 0) moveForward = 1; else {
+ 356   4              drawFrog(0,0);  // delete the frog
+ 357   4              // move the frog, checking it isn't jumping off the edge of the screen
+ 358   4              if ((frogRow == 7 && frogColumn > frogLeftLimit) || (frogRow < 7 && frogColumn > 0)) {
+ 359   5                frogColumn --;
+ 360   5              } else if (frogRow < 7) stopAnimate = 1;
+ 361   4              frogMode = 2; // pointing left
+ 362   4            }
+ 363   3          }
+ 364   2      
+ 365   2          // Handle moving right
+ 366   2          if(moveRight == 1 && millis() > clickBase + CLICKDELAY/2){
+ 367   3            watchDog = 0;   // reset the watchdog so the game doesn't end!
+ 368   3            moveRight = 0;
+ 369   3            if (RIGHT ==0) moveForward = 1; else {
+ 370   4              drawFrog(0,0); // delete the frog
+ 371   4              // move the frog, checking it isn't jumping off the edge of the screen
+ 372   4              if ((frogRow == 7 && frogColumn < frogRightLimit) || (frogRow < 7 && frogColumn < 14)) {
+ 373   5                frogColumn ++;
+ 374   5              } else if (frogRow < 7) stopAnimate = 1;
+ 375   4              frogMode = 3; // pointing right    
+ 376   4            }
+ 377   3          }
+ 378   2      
+ 379   2          // Handle 'move forward' button press
+ 380   2          if (moveForward == 1) {
+ 381   3            moveForward = 0;
+ 382   3        
+ 383   3            score+= level;          // increment the score for every move
+ 384   3            doNumber(0,7,score);    // display new score
+ 385   3            drawFrog(0,0);          // delete the frog
+ 386   3        
+ 387   3            if (frogRow > 1) {
+ 388   4              frogRow--; 
+ 389   4              // Correct for the skew in frog position created by the blockShift scrolling parameter
+ 390   4              if (frogRow == 3 && blockShiftL < 4) frogColumn--;
+ 391   4              if (frogRow == 2 && blockShiftR + blockShiftL < 5) frogColumn++;
+ 392   4              if (frogRow == 1 && blockShiftR + blockShiftL < 5) frogColumn--;
+ 393   4                      
+ 394   4            } else {
+ 395   4                        byte dockPos;
+ 396   4              // frog is at the docks!
+ 397   4              if (blockShiftL < 4 && frogColumn <15) frogColumn++;  // account for skew due to block shifting
+ 398   4              dockPos = (byte)floor(frogColumn/3);
+ 399   4              if (frogDocks[dockPos] == 0 ) {
+ 400   5                              int i;
+ 401   5                dockedFrogs++;          
+ 402   5                frogDocks[dockPos] = 1;                             // assign this dock as filled
+ 403   5                frogRow = 7;                                        // reposition the frog at the start
+ 404   5                frogColumn = 8;
+ 405   5                for (i = 1000; i>200; i = i - 100){             // make sound
+ 406   6                beep(10,i);
+ 407   6                drawDocks();                                        // redraw the docks
+ 408   6                }
+ 409   5              } else stopAnimate = 1;
+ 410   4            }
+ 411   3            frogMode = 1;             // mode 1 = forwards position
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 8   
+
+ 412   3      
+ 413   3            // check if all docks are full - if so, then level up!
+ 414   3            if (dockedFrogs >= 5) {
+ 415   4              level++;
+ 416   4              levelUp(level);
+ 417   4              if (moveDelay > 99) moveDelay -=100; // make the game speed up 
+ 418   4              initScreen();                        // reinitalise the position of game items
+ 419   4              resetDock(0);                        // reinitliase the dock
+ 420   4              dockedFrogs = 0;              
+ 421   4              drawDocks();                         // display the (now empty) docks
+ 422   4              drawLives();                         // display the lives
+ 423   4              doNumber(0,7,score);                 // display the score
+ 424   4            }      
+ 425   3          }
+ 426   2      
+ 427   2          // The frog has moved 
+ 428   2          if (watchDog == 0 && stopAnimate == 0) {
+ 429   3            watchDog = 1;               // set to something other than zero so this routine doesn't run again
+ 430   3            // redraw the frog
+ 431   3            drawFrog(frogMode,0);
+ 432   3            // redraw the screen
+ 433   3            drawGameScreen(frogMode);
+ 434   3            // make jump sound
+ 435   3            beep(30,400);
+ 436   3            beep(30,300);
+ 437   3            beep(30,200);
+ 438   3          }
+ 439   2          
+ 440   2          checkCollision();
+ 441   2          
+ 442   2          if (clickLock == 1 && millis() > clickBase + CLICKDELAY && LEFT==1 && ACT==0&& random(0,1000) > 940) c
+             -lickLock = 0; // normal debounce
+ 443   2      
+ 444   2          // check to see if the frog has been killed
+ 445   2          if (stopAnimate != 0) {
+ 446   3                      int i;
+ 447   3            // redraw the screen
+ 448   3            drawGameScreen(frogMode);
+ 449   3            // animation for frog death
+ 450   3            drawFrog(0,1);
+ 451   3            for (i = 0; i<250; i = i+ 50){  
+ 452   4              beep(50,i);
+ 453   4            }
+ 454   3            drawFrog(frogMode,1);    
+ 455   3            for (i = 250; i<500; i = i+ 50){  
+ 456   4              beep(50,i);
+ 457   4            }
+ 458   3            drawFrog(0,1);
+ 459   3            for (i = 500; i<750; i = i+ 50){  
+ 460   4              beep(50,i);
+ 461   4            }
+ 462   3            drawFrog(frogMode,1);
+ 463   3            for (i = 750; i<1000; i = i+ 50){  
+ 464   4              beep(50,i);
+ 465   4            }
+ 466   3            delay(600);
+ 467   3            lives--;          // increment the score for every move
+ 468   3            frogRightLimit++; // there's one less frog drawn on right so you can move a bit further across (if y
+             -ou really want to!)
+ 469   3            stopAnimate = 0;  // reset parameter
+ 470   3            drawLives();      // display number of lives left
+ 471   3            frogColumn = 8;   // reinitalise frog location
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 9   
+
+ 472   3            frogRow = 7;
+ 473   3            }
+ 474   2              
+ 475   2        }  // Big while loop (main game loop) goes until lives is negative
+ 476   1      } 
+*** WARNING C280 IN LINE 280 OF main.c: 'lastFrame': unreferenced local variable
+ 477          
+ 478          void checkCollision(void) {
+ 479   1        if (frogRow > 0 && frogRow < 4 && grid[frogRow-1][frogColumn] == 0) stopAnimate = 1; // the frog has fal
+             -len in the river
+ 480   1        if (frogRow > 0 && frogRow < 4 && grid[frogRow-1][frogColumn] > 9) stopAnimate = 1; // the frog has step
+             -ped on a croc
+ 481   1        if ((frogRow < 7 && frogRow > 3) && (grid[frogRow-1][frogColumn] != 0 || grid[frogRow-1][frogColumn-1] !
+             -= 0)) stopAnimate = 1; // the frog has been hit by a vehicle
+ 482   1      }
+ 483          
+ 484          // Initialise all the moving objects on the game screen
+ 485          void initScreen(void) {
+ 486   1        int initCounter[6] = {3,2,4,2,2,3};       // the length of the objects on each row - doesn't change
+ 487   1        int gapCounter[6] = {-2,-3,-4,-4,-3,-5};  // the gaps between objects - change with levels to make it ha
+             -rder as you go thru the game
+ 488   1        int counter[6];                           // used to hold the gap data
+ 489   1        byte stepMode = 0;                        // which component of the object are we drawing (they all have
+             - three - a start a middle and an end)
+ 490   1        byte stepShift = 0;                       // offset to shift up to the different objects in the array
+ 491   1        byte crocStartColumn = 0;                 // column at which to stop drawing crocs - is zero at start he
+             -nce no crocs!
+ 492   1        byte incr,col,row;
+ 493   1        
+ 494   1        // Adjust difficulty by changing gaps between objects according to level
+ 495   1        if (level == 1) {
+ 496   2          gapCounter[5] = -14;           // easiset setting, for start of game
+ 497   2        }
+ 498   1        if (level < 3) {
+ 499   2          gapCounter[4] = -6;            // make it easier for levels less than 3 by increasing the gap in the c
+             -ars on this row
+ 500   2        }
+ 501   1        if (level < 4) {
+ 502   2          gapCounter[3] = -7;
+ 503   2        }
+ 504   1        if (level > 4) {
+ 505   2                
+ 506   2          for (incr = 1; incr < 3; incr++) {
+ 507   3            gapCounter[incr]--;         // increase the gaps between the logs for levels over 4  
+ 508   3          }
+ 509   2        }
+ 510   1        if (level > 7) {                // set smaller gaps between cars for levels over 7
+ 511   2          gapCounter[3] = -4; 
+ 512   2          gapCounter[4] = -2;
+ 513   2          gapCounter[5] = -3;
+ 514   2        }
+ 515   1        if (level > 2) crocStartColumn = 5; // one croc appears at level 3 and above
+ 516   1        if (level > 6) crocStartColumn = 9; // two croc appear at level 7 and above
+ 517   1        
+ 518   1        // Initialise the counters
+ 519   1        for (incr = 0; incr < 6;incr++) counter[incr] = initCounter[incr];  
+ 520   1      
+ 521   1        // Initialise array with zeros
+ 522   1        for (col = 0; col < 16; col++) {
+ 523   2          for (row = 0; row < 6; row++) {
+ 524   3            grid[row][col] = 0;
+ 525   3          }
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 10  
+
+ 526   2        }
+ 527   1             
+ 528   1        stepMode = 0;
+ 529   1        // Initialise array with obstacles
+ 530   1        for (row = 0; row < 6; row++) {
+ 531   2          for (col = 0; col < 15; col++) {         
+ 532   3            if (counter[row] > 0) {
+ 533   4              if (14-row > counter[row]) {
+ 534   5                if (counter[row] == 1) if (stepMode == 1) stepMode = 2; // the next space is blank and we are dr
+             -awing the middle - draw the end! 
+ 535   5                if (row > 2) stepShift = 3; else stepShift = 0;         // shift up to the trucks in the array
+ 536   5                if (row == 4) stepShift = 9;                            // shift up to the cars in the array - a
+             -lso theres no middle
+ 537   5                
+ 538   5                if (row > 0) {
+ 539   6                  grid[row][col] = 4+stepMode+stepShift;                // if you are on any row but the first -
+             - draw whatever is appropriate from the bitmaps
+ 540   6                } else if (col >= crocStartColumn) {                    
+ 541   6                  grid[row][col] = 4+stepMode+stepShift;                // if you're on row zero (top row of log
+             -s) and you are above where crocs should be drawm, draw logs ...
+ 542   6                } else grid[row][col] = 10+stepMode;                    // .. otherwise draw crocs
+ 543   5                if (stepMode == 0) stepMode = 1;                        // we've drawn the left side now switch 
+             -to central sections
+ 544   5                if (stepMode == 2) stepMode = 0;                        // we've drawn the end, now reset
+ 545   5              }
+ 546   4            } 
+ 547   3            counter[row]--;                                             // decrement the counter
+ 548   3            if (counter[row] <= gapCounter[row]) {
+ 549   4              counter[row] = initCounter[row];                          // if we have gone negative enough to ac
+             -count for the gaps - reset the counter and start again
+ 550   4            }
+ 551   3          }
+ 552   2        }
+ 553   1      }
+ 554          
+ 555          // Display the frog
+ 556          void drawFrog(byte mode, bool frogDead) {
+ 557   1        if (frogRow > 6 || frogRow < 1 || frogDead == 1) {           // don't draw the frog when it's on the roa
+             -d or on logs - because they are moving, that's handled in the main drawing routine below- exception is when you are anim
+             -ating frog death
+ 558   2          if (frogRow == 1 || frogRow == 3) {                        // these allow for the blocks being shifted
+             - when animating the frog death on rows with logs
+ 559   3            ssd1306_setpos(frogColumn*8 + 7 - blockShiftL,frogRow);
+ 560   3          } else if (frogRow == 2) {
+ 561   3            ssd1306_setpos(frogColumn*8 + blockShiftR,frogRow);      
+ 562   3          } else {
+ 563   3            ssd1306_setpos(frogColumn*8,frogRow); 
+ 564   3          }
+ 565   2          ssd1306_send_data_start();
+ 566   2          sendBlock(mode,0);                   // draw the frog - mode is direction
+ 567   2          ssd1306_send_data_stop();                    
+ 568   2        }    
+ 569   1      }
+ 570          
+ 571          // Display the frog and all the moving items on the screen
+ 572          void drawGameScreen(byte mode) {
+ 573   1        bool inverse = 0;
+ 574   1        byte incr,row,col;
+ 575   1        // Draw objects going left
+ 576   1        for (row = 0; row < 6; row+=2) {
+ 577   2          if (row >=0 && row < 3) inverse = 1; else inverse = 0;                              // draw everything
+             - (except the frog) in inverse video on the river rows (0,1,2)
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 11  
+
+ 578   2          ssd1306_setpos(0,row+1);                                                            // +1 because row 
+             -0 here is actually row 1 on the screen
+ 579   2          ssd1306_send_data_start();
+ 580   2          for (incr = 0; incr < 7-blockShiftL; incr++) if (grid[row][15] == 0) {         // cover the tiny bit t
+             -o the far left of the screen up to wherever the main blocks will be drawn (depends on how far they are shifted)
+ 581   3            sendByte(0,inverse);                                                              // draw an empty 8
+             --bit line if there's nothing wrapping around
+ 582   3          } else {
+ 583   3            sendByte(pgm_read_byte(&bitmaps[grid[row][15]-1][1+blockShiftL+incr]), inverse);  // pick the correc
+             -t bit of whatever is wrapping from the right of the screen
+ 584   3          }
+ 585   2          for (col = 0; col < 15; col++) {         
+ 586   3            if (frogRow == row+1 && frogColumn == col && frogRow < 4 && frogRow > 0) {
+ 587   4              sendBlock(mode,0);                                                                          // if 
+             -we are in a location with the frog, and it's on the logs, draw it - never invert it (hence zero as second parameter here
+             -)
+ 588   4            } else if (stopAnimate == 0 && frogRow == row+1 && frogColumn == col + 1 && frogRow > 3 && frogRow <
+             - 7) {         // frog is amongst the cars and needs drawing
+ 589   4              for (incr = 0; incr < blockShiftL; incr++) sendByte(0,0);                              // draw the
+             - blank space up to the frog
+ 590   4              sendBlock(mode,0);                                                                          // dra
+             -w frog
+ 591   4              for (incr = 0; incr < 7-blockShiftL; incr++) sendByte(0,0);                            // draw the
+             - blank space after the frog
+ 592   4              col++;                                                                                      // we'
+             -ve now drawn two columns so increment
+ 593   4            } else {
+ 594   4              sendBlock(grid[row][col],inverse);                                                          // dra
+             -w the correct object for this space - it's not a frog ;)
+ 595   4            }
+ 596   3          }
+ 597   2          // fill in the bit to the right of the main blocks 
+ 598   2          for (incr = 0; incr < blockShiftL; incr++) if (grid[row][15] == 0) sendByte(0,inverse); else sendByte(
+             -pgm_read_byte(&bitmaps[grid[row][15]-1][incr]),inverse);
+ 599   2      
+ 600   2          ssd1306_send_data_stop();
+ 601   2        }
+ 602   1        if (frogColumn == 0) drawFrog(mode,1); // this covers the exceptional case where the frog is in the far 
+             -left colum, in which case the normal routine can't draw it when it's on the road
+ 603   1        
+ 604   1        // Draw objects going right - see comments above, works in basically the same way
+ 605   1        for (row = 1; row < 6; row+=2) {
+ 606   2          if (row > 0 && row < 3) inverse = 1; else inverse = 0;
+ 607   2          ssd1306_setpos(0,row+1);
+ 608   2          ssd1306_send_data_start();
+ 609   2          for (incr = 0; incr < blockShiftR; incr++) if (grid[row][15] == 0) sendByte(0, inverse); else sendByte
+             -(pgm_read_byte(&bitmaps[grid[row][15]-1][incr+(8-blockShiftR)]),inverse);
+ 610   2          for (col = 0; col < 15; col++) {         
+ 611   3            if (frogRow == row+1 && frogColumn == col && frogRow < 4 && frogRow > 0) {
+ 612   4              sendBlock(mode,0);    
+ 613   4            } else if (stopAnimate == 0 && frogRow == row+1 && frogColumn == col + 1 && frogRow > 3 && frogRow <
+             - 7) {  
+ 614   4              for (incr = 0; incr < 7-blockShiftR; incr++) sendByte(0,0);
+ 615   4              sendBlock(mode,0); // draw frog
+ 616   4              for (incr = 0; incr < blockShiftR; incr++) sendByte(0,0);
+ 617   4              col++;        
+ 618   4            } else {
+ 619   4              sendBlock(grid[row][col],inverse);        
+ 620   4            }
+ 621   3          }
+ 622   2          for (incr = 0; incr < 7-blockShiftR; incr++) if (grid[row][15] == 0) sendByte(0,inverse); else sendByt
+             -e(pgm_read_byte(&bitmaps[grid[row][15]-1][incr]),inverse);
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 12  
+
+ 623   2          ssd1306_send_data_stop();
+ 624   2        }
+ 625   1        if (frogColumn == 0) drawFrog(mode,1);
+ 626   1      }
+ 627          
+ 628          // Send one byte to the screen
+ 629          void sendByte(byte fill, bool inverse) {
+ 630   1        if (inverse == 0) ssd1306_send_byte(fill); else ssd1306_send_byte(~fill);
+ 631   1      }
+ 632          
+ 633          // Send one block of 8 bytes to the screen - inverse means inverse video, for the river section
+ 634          void sendBlock(byte fill, bool inverse){
+ 635   1              int incr;
+ 636   1        for (incr = 0; incr < 8; incr++) {
+ 637   2          if (fill > 0) {
+ 638   3            if (inverse == 0) ssd1306_send_byte(pgm_read_byte(&bitmaps[fill-1][incr])); else ssd1306_send_byte(~
+             -pgm_read_byte(&bitmaps[fill-1][incr]));  
+ 639   3          } else if (inverse ==0) ssd1306_send_byte(0); else ssd1306_send_byte(0xFF); 
+ 640   2        }
+ 641   1      }
+ 642          
+ 643          // Draw the frog lives (in the right hand corner)
+ 644          void drawLives(void) {
+ 645   1              int incr;
+ 646   1        byte tempRow = frogColumn;
+ 647   1        byte tempCol = frogRow;
+ 648   1        frogRow = 7;
+ 649   1        
+ 650   1        for (incr = 2; incr > 0; incr--) {
+ 651   2          frogColumn = 15-incr;
+ 652   2          drawFrog(0,1);
+ 653   2        }
+ 654   1      
+ 655   1        for (incr = lives; incr > 0; incr--) {
+ 656   2          frogColumn = 15-incr;
+ 657   2          drawFrog(1,1);
+ 658   2        }
+ 659   1        frogRow = tempCol;
+ 660   1        frogColumn = tempRow;    
+ 661   1      }
+ 662          
+ 663          // Draw the docks for the frog to land in at top of screen
+ 664          void drawDocks(void) {
+ 665   1        byte drawPos = 3;
+ 666   1              byte incr ;
+ 667   1        for (incr = 0; incr < 5; incr++) {
+ 668   2          ssd1306_setpos(drawPos,0);
+ 669   2          ssd1306_send_data_start();
+ 670   2          ssd1306_send_byte(B11111111);
+ 671   2          ssd1306_send_byte(B00000001);
+ 672   2          ssd1306_send_byte(B00000001);
+ 673   2          if (frogDocks[incr] == 1) sendBlock(1,0); 
+ 674   2          else{
+ 675   3                      byte lxn;
+ 676   3                      for(lxn = 0; lxn < 8; lxn++)
+ 677   3                              ssd1306_send_byte(B00000001);
+ 678   3              }
+ 679   2          ssd1306_send_byte(B00000001);
+ 680   2          ssd1306_send_byte(B00000001);
+ 681   2          ssd1306_send_byte(B11111111);
+ 682   2          ssd1306_send_data_stop();
+ 683   2          drawPos+= 24;
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 13  
+
+ 684   2          }    
+ 685   1      }
+ 686          
+ 687          // Set all the frog docks to a single value
+ 688          void resetDock(byte value) { byte incr;  for (incr = 0; incr < 5;incr++) frogDocks[incr] = value; }
+ 689          
+ 690          // Handle what happens at the end of a level
+ 691          void levelUp(int number) {  
+ 692   1        // Flash the frog docks
+ 693   1              byte incr;
+ 694   1        delay(200);
+ 695   1        for (incr = 0; incr < 5; incr ++) {
+ 696   2                int i;
+ 697   2          resetDock(0);
+ 698   2          drawDocks();
+ 699   2          for (i = 800; i>200; i = i - 200){
+ 700   3          beep(20,i);
+ 701   3          }
+ 702   2          resetDock(1);
+ 703   2          drawDocks();
+ 704   2          for (i = 800; i>200; i = i - 200){
+ 705   3          beep(20,i);
+ 706   3          }
+ 707   2        }  
+ 708   1        delay(500);
+ 709   1        ssd1306_fillscreen(0x00);
+ 710   1        ssd1306_char_f6x8(35, 1, "---------");
+ 711   1        ssd1306_char_f6x8(35, 3, " LEVEL ");
+ 712   1        ssd1306_char_f6x8(35, 5, "---------");
+ 713   1        doNumber(77,3,number);
+ 714   1        delay(1500);    
+ 715   1        ssd1306_fillscreen(0x00);
+ 716   1      }
+ 717          
+ 718          // Move all the items on the game screen (wrapping at the ends) and check for frog dropping off the end of
+             - the screen
+ 719          void moveBlocks(void) {
+ 720   1        int direct = 0;
+ 721   1        byte row,col;
+ 722   1        if (flipFlop == 1) flipFlop = 0; else flipFlop = 1;
+ 723   1        
+ 724   1        for (row = 0; row < 6; row++) {
+ 725   2          // Move the frog along and check to see whether it's gone off the screen, in which case it dies
+ 726   2          if (frogRow < 4 && frogRow > 0) { 
+ 727   3            if (frogRow == row + 1) {
+ 728   4              if (direct == 1 && flipFlop == 1) {
+ 729   5                if (frogColumn >= 14) stopAnimate = 1; else frogColumn++; 
+ 730   5              } else if (direct == 0) {
+ 731   5                if (frogColumn < 1) stopAnimate = 1; else frogColumn--;
+ 732   5              }
+ 733   4            }  
+ 734   3          }
+ 735   2          if (direct == 0) { // move left
+ 736   3            byte temp = grid[row][0];
+ 737   3            for (col = 0; col < 15; col++) {         
+ 738   4              grid[row][col] = grid[row][col+1];
+ 739   4            }
+ 740   3            grid[row][15] = temp; // wrap around
+ 741   3            direct = 1;
+ 742   3          } else { // move right
+ 743   3            if (flipFlop == 1) {
+ 744   4              byte temp = grid[row][15];
+C51 COMPILER V9.60.7.0   MAIN                                                              05/22/2025 14:50:16 PAGE 14  
+
+ 745   4              for (col = 15; col > 0; col--) {         
+ 746   5                grid[row][col] = grid[row][col-1];
+ 747   5                }
+ 748   4              grid[row][0] = temp; // wrap around
+ 749   4              }
+ 750   3            direct = 0;  
+ 751   3            }
+ 752   2          }
+ 753   1        }
+ 754          
+ 755          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5659    ----
+   CONSTANT SIZE    =    910    ----
+   XDATA SIZE       =    136     107
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

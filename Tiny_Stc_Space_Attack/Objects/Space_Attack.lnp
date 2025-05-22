@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\ssd1306xled.obj" 
+TO ".\Objects\Space_Attack" 
+PRINT(".\Listings\Space_Attack.m51") RAMSIZE(256) 

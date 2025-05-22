@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\ssd1306xled.obj",
+".\Objects\main.obj" 
+TO ".\Objects\Tiny_Stc_Breakout" 
+PRINT(".\Listings\Tiny_Stc_Breakout.m51") RAMSIZE(256) 
